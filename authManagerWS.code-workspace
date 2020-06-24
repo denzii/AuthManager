@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../AuthServer/AuthServer"
+		},
+		{
+			"path": "../AuthServer/Tests"
+		},
+		{
+			"path": "../AuthServer/AuthClient"
+		}
+	],
+	"settings": {}
+}
