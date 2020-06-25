@@ -11,7 +11,8 @@ using AuthServer.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using AuthServer.Models.Entities;
-using InvestmentAssistantAPI.Contracts.Version1;
+using AuthServer.Contracts.Version1;
+using AuthServer.Configurations;
 
 namespace AuthServer
 {
@@ -47,8 +48,8 @@ namespace AuthServer
 
 					if (!context.Policies.Any()){
 						context.Policies.Add(new Policy{
-							PolicyName = AuthorizationPolicies.AdminPolicy,
-							PolicyClaim = AuthorizationPolicies.AdminClaim
+							Name = AuthorizationPolicies.AdminPolicy,
+							Claim = AuthorizationPolicies.AdminClaim
 						});
 					}				
 				}

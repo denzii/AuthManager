@@ -30,7 +30,7 @@ namespace AuthServer.Persistence.Repositories
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 OrganisationName = u.Organisation.OrganisationName,
-                PolicyName = u.Policy.PolicyName
+                PolicyName = u.Policy.Name
             });
         }
 
@@ -81,7 +81,6 @@ namespace AuthServer.Persistence.Repositories
 
             return newUser;
         }
-
 
         public Task<bool> UserWithEmailExistsAsync(string email)
         {

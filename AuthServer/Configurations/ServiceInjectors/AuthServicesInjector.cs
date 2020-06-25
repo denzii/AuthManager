@@ -1,6 +1,6 @@
 ﻿using AuthServer.Configurations.DataTransferObjects;
 using AuthServer.Configurations.ServiceInjectors.Interfaces;
-using InvestmentAssistantAPI.Contracts.Version1;
+using AuthServer.Contracts.Version1;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

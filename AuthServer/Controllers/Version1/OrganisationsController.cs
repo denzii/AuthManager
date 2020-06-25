@@ -13,8 +13,8 @@ using AuthServer.Contracts.Version1;
 using static AuthServer.Contracts.Version1.RequestContracts.Organisations;
 using static AuthServer.Contracts.Version1.ResponseContracts.Organisations;
 using AutoMapper;
-using InvestmentAssistantAPI.Contracts.Version1;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using AuthServer.Configurations;
 
 namespace AuthServer.Controllers.Version1
 {

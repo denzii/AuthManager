@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using AuthServer.Contracts.Version1;
 using AuthServer.Configurations.CustomExtensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using static AuthServer.Contracts.Version1.ResponseContracts.Users;
+using AuthServer.Models.DataTransferObjects;
 
 namespace AuthServer.Controllers.Version1
 {
@@ -29,7 +29,7 @@ namespace AuthServer.Controllers.Version1
 
         // GET: api/v1/Users
         [HttpGet(ApiRoutes.Users.GetAll)]
-        public async Task<ActionResult<GetAllResponse>> GetUsers()
+        public async Task<ActionResult<UserDTO>> GetUsers()
         {
             //TODO Add Pagination
             var organisationID = Convert.ToInt32(HttpContext.GetOrganisationID());

@@ -7,16 +7,14 @@ using AuthServer.Models.Services.Interfaces;
 using AuthServer.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using static AuthServer.Contracts.Version1.RequestContracts.Authentication;
-using static AuthServer.Contracts.Version1.ResponseContracts.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using InvestmentAssistantAPI.Contracts.Version1;
 using static AuthServer.Contracts.Version1.RequestContracts.Authorization;
 using static AuthServer.Contracts.Version1.ResponseContracts.Authorization;
 using Microsoft.AspNetCore.Identity;
 using AuthServer.Models.Entities;
 using System.Security.Claims;
+using AuthServer.Configurations;
 
 namespace AuthServer.Controllers.Version1
 {
@@ -61,7 +59,7 @@ namespace AuthServer.Controllers.Version1
                 user.Policy = policy;
                 _unitOfWork.UserRepository.AddAsync(user);
 
-                await _userManager.AddClaimAsync(user, new Claim(policy.PolicyClaim, "true"));
+                await _userManager.AddClaimAsync(user,new Claim(AuthorizationPolicies.AdminClaim, "true"));
                 
                 transaction.Commit();
                 var response = new AssignmentResponse{

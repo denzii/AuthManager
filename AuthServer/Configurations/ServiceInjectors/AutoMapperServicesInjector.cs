@@ -18,14 +18,12 @@ namespace AuthServer.Configurations.ServiceInjectors
 			{
 				config.AddProfile(new EntityToResponseProfile());
 				config.AddProfile(new RequestToEntityProfile());
-				config.AddProfile(new RequestToResponseProfile());
 			});
 			IMapper mapper = config.CreateMapper();
 
 			services.AddSingleton(mapper);
 			services.AddTransient<EntityToResponseProfile>();
 			services.AddTransient<RequestToEntityProfile>();
-			services.AddTransient<RequestToResponseProfile>();
 		}
 	}
 }

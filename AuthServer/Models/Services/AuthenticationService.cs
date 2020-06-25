@@ -14,7 +14,8 @@ using AutoMapper;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using InvestmentAssistantAPI.Contracts.Version1;
+using AuthServer.Contracts.Version1;
+using AuthServer.Configurations;
 
 namespace AuthServer.Models.Services
 {
@@ -61,7 +62,7 @@ namespace AuthServer.Models.Services
             Policy adminPolicy = null;
 
             if (!organisationHasUsers){
-                adminPolicy = new Policy{PolicyName = AuthorizationPolicies.AdminPolicy, PolicyClaim = AuthorizationPolicies.AdminClaim};
+                adminPolicy = new Policy{Name = AuthorizationPolicies.AdminPolicy, Claim = AuthorizationPolicies.AdminClaim};
             }
             User newUser = await Task.Run(() =>_unitOfWork.UserRepository.CreateUser(request, organisation, adminPolicy));
 
