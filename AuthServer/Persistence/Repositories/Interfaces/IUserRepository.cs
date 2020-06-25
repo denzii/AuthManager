@@ -1,4 +1,5 @@
 ﻿using AuthServer.Contracts.Version1.RequestContracts;
+using AuthServer.Models.DataTransferObjects;
 using AuthServer.Models.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,16 +11,16 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 {
 	public interface IUserRepository : IRepository<User>
 	{
-		IEnumerable<User> GetAllByOrganisation(Organisation organisation);
+		IEnumerable<UserDTO> GetAllByOrganisation(int organisationID);
 
-		IEnumerable<User> GetByUserName(string firstName, string lastName, Organisation organisation);
-
+		IEnumerable<User> GetByUserName(string firstName, string lastName, int organisationID);
+        
 		User GetByEmail(string email);
 
 		Task<bool> UserWithEmailExistsAsync(string email);
 
-		User GetUserWithOrganisation(string ID);
+		User GetUserWithDetails(string ID);
 
-		User CreateUser(RegistrationRequest request, Organisation organisation);
+		User CreateUser(RegistrationRequest request, Organisation organisation, Policy policy);
     }
 }

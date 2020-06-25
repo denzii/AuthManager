@@ -1,5 +1,6 @@
 ﻿using AuthServer.Configurations.DataTransferObjects;
 using AuthServer.Configurations.ServiceInjectors.Interfaces;
+using InvestmentAssistantAPI.Contracts.Version1;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +49,9 @@ namespace AuthServer.Configurations.ServiceInjectors
                     options.TokenValidationParameters = tokenValidationParameters;
                 });
         
-             services.AddAuthorization();
+             services.AddAuthorization(options => {
+                 options.AddPolicy(AuthorizationPolicies.AdminPolicy, builder => builder.RequireClaim(AuthorizationPolicies.AdminClaim, "true"));
+                 });
         }
 	}
 }

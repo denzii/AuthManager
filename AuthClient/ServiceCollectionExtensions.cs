@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System;
+using System.Linq;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using System.Collections.Generic;
@@ -61,6 +61,18 @@ namespace AuthClient
 
 					}}, new List<string>()}
 				});
+			});
+		}
+
+		public static void InjectAuthorizationPolicies(
+			this IServiceCollection services, 
+			Dictionary<string,string> PolicyClaimPairs)
+		{
+			services.AddAuthorization(options => {
+				foreach(var pair in PolicyClaimPairs)
+				{
+					options.AddPolicy(pair.Key, builder => builder.RequireClaim(pair.Value, "true"));
+				}
 			});
 		}
 	}

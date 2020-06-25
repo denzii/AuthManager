@@ -13,10 +13,13 @@ using AuthServer.Contracts.Version1;
 using static AuthServer.Contracts.Version1.RequestContracts.Organisations;
 using static AuthServer.Contracts.Version1.ResponseContracts.Organisations;
 using AutoMapper;
+using InvestmentAssistantAPI.Contracts.Version1;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace AuthServer.Controllers.Version1
 {
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class OrganisationsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -28,20 +31,23 @@ namespace AuthServer.Controllers.Version1
             _mapper = mapper;
         }
 
-        // GET: api/v1/Organisations
-        [HttpGet(ApiRoutes.Organisations.GetAll)]
-        public async Task<ActionResult<IEnumerable<Organisation>>> GetOrganisations()
-        {
-            var x = await _unitOfWork.OrganisationRepository.GetAllWithUsers();
-        
-            return Ok(x);
-        }
+        // // GET: api/v1/Organisations
+        // [HttpGet(ApiRoutes.Organisations.GetAll)]
+        // [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
+
+        //TODO implement internal JWT and roles so only SuperUser could access this endpoint
+        // Do not allow person of organisation access all organisation data (This app will be used on many individual projects independent of each other.)
+        // public async Task<ActionResult<IEnumerable<Organisation>>> GetOrganisations()
+        // {        
+        //     return Ok(await _unitOfWork.OrganisationRepository.GetAllWithUsers());
+        // }
 
         // GET: api/v1/Organisations/{id}
         [HttpGet(ApiRoutes.Organisations.Get)]
-        public async Task<ActionResult<Organisation>> GetOrganisation(int id)
+        [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
+        public async Task<ActionResult<Organisation>> GetOrganisation(string ID)
         {
-            Organisation organisation = await _unitOfWork.OrganisationRepository.FindAsync(id);
+            Organisation organisation = await _unitOfWork.OrganisationRepository.FindAsync(Convert.ToInt32(ID));
 
             if (organisation == null)
             {
@@ -54,9 +60,10 @@ namespace AuthServer.Controllers.Version1
 
         // POST: api/v1/Organisations
         [HttpPost(ApiRoutes.Organisations.Post)]
-        // [Authorize(Policy = "Admin")]
         public async Task<ActionResult<PostResponse>> PostOrganisation(PostRequest request)
         {
+            //TODO Implement internal JWT to authorize clients and selectively allow hitting this endpoint on
+            // Currently publicly accessible.
             try
             {
                 Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.OrganisationName);
@@ -66,8 +73,7 @@ namespace AuthServer.Controllers.Version1
                     return BadRequest("An organisation with the specified name already exists");
                 }
 
-                organisation = new Organisation()
-                {
+                organisation = new Organisation{
                     OrganisationName = request.OrganisationName,
                     EstablishedOn = DateTime.Now
                 };
@@ -87,22 +93,6 @@ namespace AuthServer.Controllers.Version1
                 return BadRequest(e.Message);
             }
            
-        }
-
-        // DELETE: api/v1/Organisation/{id}
-        [HttpDelete(ApiRoutes.Organisations.Delete)]
-        public async Task<ActionResult<Organisation>> DeleteOrganisation(int id)
-        {
-            Organisation organisation = await _unitOfWork.OrganisationRepository.FindAsync(id);
-            if (organisation == null)
-            {
-                return NotFound();
-            }
-
-            _unitOfWork.OrganisationRepository.Remove(organisation);
-            await _unitOfWork.CompleteAsync();
-
-            return organisation;
         }
     }
 }

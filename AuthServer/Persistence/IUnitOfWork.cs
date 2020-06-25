@@ -14,6 +14,8 @@ namespace AuthServer.Persistence
 
         IRefreshTokenRepository RefreshTokenRepository { get; }
 
+        IPolicyRepository PolicyRepository { get; }
         Task<int> CompleteAsync();
+        int Complete();
     }
 }

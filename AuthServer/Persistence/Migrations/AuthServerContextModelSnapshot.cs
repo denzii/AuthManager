@@ -35,6 +35,27 @@ namespace AuthServer.Persistence.Migrations
                     b.ToTable("Organisations");
                 });
 
+            modelBuilder.Entity("AuthServer.Models.Entities.Policy", b =>
+                {
+                    b.Property<string>("ID")
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+
+                    b.Property<int?>("OrganisationID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PolicyClaim")
+                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+
+                    b.Property<string>("PolicyName")
+                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("OrganisationID");
+
+                    b.ToTable("Policies");
+                });
+
             modelBuilder.Entity("AuthServer.Models.Entities.RefreshToken", b =>
                 {
                     b.Property<string>("Token")
@@ -124,6 +145,9 @@ namespace AuthServer.Persistence.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("PolicyID")
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+
                     b.Property<DateTime>("RegisteredOn")
                         .HasColumnType("datetime(6)");
 
@@ -134,15 +158,6 @@ namespace AuthServer.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(1) CHARACTER SET utf8mb4")
                         .HasMaxLength(1);
-
-                    b.Property<decimal>("TotalEarnings")
-                        .HasColumnType("decimal(18, 3)");
-
-                    b.Property<decimal>("TotalInvestment")
-                        .HasColumnType("decimal(18, 3)");
-
-                    b.Property<decimal>("TotalWithdrawals")
-                        .HasColumnType("decimal(18, 3)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
@@ -161,6 +176,8 @@ namespace AuthServer.Persistence.Migrations
                         .HasName("UserNameIndex");
 
                     b.HasIndex("OrganisationID");
+
+                    b.HasIndex("PolicyID");
 
                     b.ToTable("AspNetUsers");
                 });
@@ -297,6 +314,14 @@ namespace AuthServer.Persistence.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("AuthServer.Models.Entities.Policy", b =>
+                {
+                    b.HasOne("AuthServer.Models.Entities.Organisation", "Organisation")
+                        .WithMany("Policies")
+                        .HasForeignKey("OrganisationID")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("AuthServer.Models.Entities.RefreshToken", b =>
                 {
                     b.HasOne("AuthServer.Models.Entities.User", "User")
@@ -313,6 +338,11 @@ namespace AuthServer.Persistence.Migrations
                         .HasForeignKey("OrganisationID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("AuthServer.Models.Entities.Policy", "Policy")
+                        .WithMany("Users")
+                        .HasForeignKey("PolicyID")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

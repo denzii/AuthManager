@@ -27,23 +27,11 @@ namespace AuthServer.Models.Entities
 		public override string Email { get; set; }
 
 		[Required]
-		[Range(0, Double.PositiveInfinity)]
-		[Column(TypeName = "decimal(18, 3)")]
-		public decimal TotalInvestment { get; set; }
-
-		[Required]
-		[Column(TypeName = "decimal(18, 3)")]
-		public decimal TotalEarnings { get; set; }
-
-		[Required]
-		[Range(0, Double.PositiveInfinity)]
-		[Column(TypeName = "decimal(18, 3)")]
-		public decimal TotalWithdrawals { get; set; }
-
-		[Required]
 		public DateTime RegisteredOn { get; set; }
 
 		[Required]
 		virtual public Organisation Organisation { get; set; }
+
+		virtual public Policy Policy { get; set; }
 	}
 }

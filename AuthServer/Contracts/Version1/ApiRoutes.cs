@@ -21,7 +21,11 @@ namespace AuthServer.Contracts.Version1
 			public const string Refresh = BaseRoute + "/" + nameof(Authentication) + "/" + "Refresh";
 		}
 
-	
+		public static class Authorization
+		{
+			public const string Assign = BaseRoute + "/" + nameof(Authorization) + "/" + "Assign";
+			public const string Unassign = BaseRoute + "/" + nameof(Authorization) + "/" + "Unassign";
+		}
 
 		public static class Organisations
 		{
@@ -32,23 +36,13 @@ namespace AuthServer.Contracts.Version1
 			public const string Patch = BaseRoute + "/" + nameof(Organisations) + "/" + Identifier;
 		}
 
-		public static class ProductMaterials
+		public static class Policies
 		{
-			public const string GetAll = BaseRoute + "/" + nameof(ProductMaterials);
-			public const string Post = BaseRoute + "/" + nameof(ProductMaterials);
-			public const string Delete = BaseRoute + "/" + nameof(ProductMaterials) + "/" + Identifier;
-			public const string Get = BaseRoute + "/" + nameof(ProductMaterials) + "/" + Identifier;
-			public const string Patch = BaseRoute + "/" + nameof(ProductMaterials) + "/" + Identifier;
-		}
+			public const string GetAll = BaseRoute + "/" + nameof(Policies) + "/";
+			public const string Post = BaseRoute + "/" + nameof(Policies);
+            public const string Get = BaseRoute + "/" + nameof(Policies) + "/" + Identifier;
+        }
 
-		public static class Products
-		{
-			public const string GetAll = BaseRoute + "/" + nameof(Products);
-			public const string Post = BaseRoute + "/" + nameof(Products);
-			public const string Delete = BaseRoute + "/" + nameof(Products) + "/" + Identifier;
-			public const string Get = BaseRoute + "/" + nameof(Products) + "/" + Identifier;
-			public const string Patch = BaseRoute + "/" + nameof(Products) + "/" + Identifier;
-		}
 
 		public static class Users
 		{

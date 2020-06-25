@@ -8,7 +8,7 @@ using AuthServer.Contracts.Version1.ResponseContracts;
 
 namespace AuthServer.Configurations.AutoMappings
 {
-	public class EntityToResponseProfile : Profile, IEntityToResponseProfile
+	public class EntityToResponseProfile : Profile
 	{
 		public EntityToResponseProfile()
 		{

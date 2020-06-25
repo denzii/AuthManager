@@ -28,7 +28,9 @@ namespace AuthServer.Persistence.Repositories
 
         public Task<Organisation> GetByNameAsync(string organisationName)
         {
-            return AppContext.Organisations.SingleOrDefaultAsync(o => o.OrganisationName == organisationName);
+            return AppContext.Organisations
+            .Include(organisation => organisation.Users)
+            .SingleOrDefaultAsync(o => o.OrganisationName == organisationName);
         }
 
         public AuthServerContext AppContext

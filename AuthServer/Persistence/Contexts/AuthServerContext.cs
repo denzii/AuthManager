@@ -25,5 +25,6 @@ namespace AuthServer.Persistence.Contexts
 
 		public DbSet<Organisation> Organisations { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Policy> Policies { get; set; }
 	}
 }

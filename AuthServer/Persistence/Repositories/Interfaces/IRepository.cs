@@ -30,9 +30,8 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 
         IDbContextTransaction BeginTransaction();
 
-        void Commit(IDbContextTransaction transaction);
-
         void TrackEntities(IEnumerable<TEntity> entities);
+        
         void TrackEntity(TEntity entity);
     }
 }

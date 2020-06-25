@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using AuthServer.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using AuthServer.Models.Entities;
+using InvestmentAssistantAPI.Contracts.Version1;
 
 namespace AuthServer
 {
@@ -32,24 +34,23 @@ namespace AuthServer
 					webBuilder.UseStartup<Startup>();
 				});
 
-		private static async void InitializeHostServices(IHost host)
+		private static void InitializeHostServices(IHost host)
 		{
 			using (var scope = host.Services.CreateScope())
 			{
 				var services = scope.ServiceProvider;
 				
-				var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-				if(!await roleManager.RoleExistsAsync("Admin"))
-				{
-					var adminRole = new IdentityRole("Admin");
-					await roleManager.CreateAsync(adminRole);
-				}
-
 				try
 				{
-					DbContext context = services.GetRequiredService<AuthServerContext>();
-					context.Database.Migrate();				
+					AuthServerContext context = services.GetRequiredService<AuthServerContext>();
+					context.Database.Migrate();
+
+					if (!context.Policies.Any()){
+						context.Policies.Add(new Policy{
+							PolicyName = AuthorizationPolicies.AdminPolicy,
+							PolicyClaim = AuthorizationPolicies.AdminClaim
+						});
+					}				
 				}
 				catch (Exception e)
 				{

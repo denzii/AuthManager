@@ -1,4 +1,5 @@
-﻿using AuthServer.Models.Entities;
+﻿using AuthServer.Models.DataTransferObjects;
+using AuthServer.Models.Entities;
 using AuthServer.Persistence.Contexts;
 using AuthServer.Persistence.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -16,12 +17,21 @@ namespace AuthServer.Persistence.Repositories
         {
         }
 
-        public IEnumerable<User> GetAllByOrganisation(Organisation organisation)
+        public IEnumerable<UserDTO> GetAllByOrganisation(int organisationID)
         {
             return AppContext.Users
-                .Where(u => u.Organisation.ID == organisation.ID)
-                .OrderBy(u => u.FirstName)
-                .ThenBy(u => u.LastName);
+            .Where(u => u.Organisation.ID == organisationID)
+            ?.Include(u => u.Organisation)
+            .Include(u => u.Policy)
+            .OrderBy(u => u.FirstName)
+            .ThenBy(u => u.LastName)
+            .ToList()
+            .Select(u => new UserDTO{
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                OrganisationName = u.Organisation.OrganisationName,
+                PolicyName = u.Policy.PolicyName
+            });
         }
 
         public User GetByEmail(string email)
@@ -31,24 +41,34 @@ namespace AuthServer.Persistence.Repositories
             .SingleOrDefault(u => u.Email == email);
         }
 
-        public User GetUserWithOrganisation(string ID)
+        public User GetUserWithDetails(string ID)
         {
-            return AppContext.Users.Include(u => u.Organisation)
-                .SingleOrDefault(u => u.Id == ID);
+            return AppContext.Users
+            .Include(user => user.Organisation)
+            .Include(user => user.Policy)
+            .SingleOrDefault(u => u.Id == ID);
+        }
+        public IEnumerable<User> GetAllWithDetails(string ID)
+        {
+            return AppContext.Users
+            .Include(user => user.Organisation)
+            .Include(user => user.Policy)
+            .ToList();
         }
 
-        public IEnumerable<User> GetByUserName(string firstName, string lastName, Organisation organisation)
+        public IEnumerable<User> GetByUserName(string firstName, string lastName, int organisationID)
         {
            return AppContext.Users
-                .Where(u => u.FirstName == firstName && u.LastName == lastName && u.Organisation.ID == organisation.ID)
-                .OrderBy(u => u.FirstName)
-                .ThenBy(u => u.LastName);
+            .Where(u => u.FirstName == firstName && u.LastName == lastName && u.Organisation.ID == organisationID)
+            ?.OrderBy(u => u.FirstName)
+            .ThenBy(u => u.LastName);
         }
 
-        public User CreateUser(RegistrationRequest request, Organisation organisation)
+        public User CreateUser(RegistrationRequest request, Organisation organisation, Policy policy)
         {
             User newUser = new User
             {
+                Id = Guid.NewGuid().ToString(),
                 UserName = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
@@ -56,6 +76,7 @@ namespace AuthServer.Persistence.Repositories
                 Email = request.Email,
                 RegisteredOn = DateTime.Now,
                 Organisation = organisation,
+                Policy = policy
             };
 
             return newUser;

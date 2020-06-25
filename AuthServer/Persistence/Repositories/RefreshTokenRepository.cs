@@ -30,7 +30,7 @@ namespace AuthServer.Persistence.Repositories
 			var refreshToken = new RefreshToken
 			{
 				JwtID = jwtID,
-				UserID = Convert.ToString(userID),
+				UserID = userID,
 				CreatedAt = DateTime.UtcNow,
 				ExpiryDate = DateTime.UtcNow.AddMonths(6)
 			};

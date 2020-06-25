@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace AuthServer.Configurations.CustomExtensions
@@ -10,12 +11,26 @@ namespace AuthServer.Configurations.CustomExtensions
 	{
 		public static string GetUserID(this HttpContext httpContext)
 		{
-			if (httpContext.User == null)
+			ClaimsPrincipal user = httpContext.User;
+
+			if (user == null)
 			{
 				return String.Empty;
 			}
 
-			return httpContext.User.Claims.Single(x => x.Type == "ID").Value;
+			return user.Claims.Single(x => x.Type == "ID").Value;
+		}
+
+		public static string GetOrganisationID(this HttpContext httpContext)
+		{
+			ClaimsPrincipal user = httpContext.User;
+
+			if (user == null)
+			{
+				return String.Empty;
+			}
+
+			return user.Claims.Single(x => x.Type == "OrganisationID").Value;
 		}
 	}
 }

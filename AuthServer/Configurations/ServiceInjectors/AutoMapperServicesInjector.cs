@@ -17,11 +17,15 @@ namespace AuthServer.Configurations.ServiceInjectors
 			MapperConfiguration config = new AutoMapper.MapperConfiguration(config =>
 			{
 				config.AddProfile(new EntityToResponseProfile());
+				config.AddProfile(new RequestToEntityProfile());
+				config.AddProfile(new RequestToResponseProfile());
 			});
 			IMapper mapper = config.CreateMapper();
 
 			services.AddSingleton(mapper);
-			services.AddTransient<IEntityToResponseProfile, EntityToResponseProfile>();
+			services.AddTransient<EntityToResponseProfile>();
+			services.AddTransient<RequestToEntityProfile>();
+			services.AddTransient<RequestToResponseProfile>();
 		}
 	}
 }

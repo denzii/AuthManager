@@ -43,7 +43,7 @@ namespace AuthServer.Controllers.Version1
             catch (Exception e) {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    e.Message + e.StackTrace
+                    e.InnerException.Message + e.StackTrace
                     );
             }   
         }
@@ -86,7 +86,7 @@ namespace AuthServer.Controllers.Version1
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    e.Message + e.StackTrace
+                    e.InnerException + e.StackTrace
                     );
             }
         }

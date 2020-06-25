@@ -10,11 +10,14 @@ using AuthServer.Persistence.Contexts;
 using AuthServer.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using AuthServer.Contracts.Version1;
+using AuthServer.Configurations.CustomExtensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using static AuthServer.Contracts.Version1.ResponseContracts.Users;
 
 namespace AuthServer.Controllers.Version1
 {
-    // [Authorize]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class UsersController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -26,18 +29,23 @@ namespace AuthServer.Controllers.Version1
 
         // GET: api/v1/Users
         [HttpGet(ApiRoutes.Users.GetAll)]
-        // [Authorize(Policy = "Admin")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<GetAllResponse>> GetUsers()
         {
-            return await _unitOfWork.UserRepository.ToListAsync();
+            //TODO Add Pagination
+            var organisationID = Convert.ToInt32(HttpContext.GetOrganisationID());
+
+            var users = await Task.Run(() =>_unitOfWork.UserRepository.GetAllByOrganisation(organisationID));
+
+            return Ok(
+                await Task.Run(() =>_unitOfWork.UserRepository.GetAllByOrganisation(organisationID))
+                );
         }
 
         // GET: api/v1/Users/{id}
         [HttpGet(ApiRoutes.Users.Get)]
-        [Authorize(Policy = "Admin")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<User>> GetUser(string ID)
         {
-            User user = await _unitOfWork.UserRepository.FindAsync(id);
+            User user = await Task.Run(() =>_unitOfWork.UserRepository.GetUserWithDetails(ID));
 
             if (user == null)
             {

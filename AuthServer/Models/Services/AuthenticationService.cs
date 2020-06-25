@@ -14,7 +14,7 @@ using AutoMapper;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using AuthServer.Models.Handlers.Interfaces;
+using InvestmentAssistantAPI.Contracts.Version1;
 
 namespace AuthServer.Models.Services
 {
@@ -52,36 +52,45 @@ namespace AuthServer.Models.Services
                 return new RegistrationResponse { Errors = new List<string>{validationError} };
             }
 
-            User newUser = await Task.Run(() =>_unitOfWork.UserRepository.CreateUser(request, organisation));
-            
-            return await GetRegistrationResponse(newUser,organisation, request.Password);
+            return await GetRegistrationResponse(request, organisation);
         }
 
-        private async Task<RegistrationResponse> GetRegistrationResponse(User newUser, Organisation organisation, string password)
+        private async Task<RegistrationResponse> GetRegistrationResponse(RegistrationRequest request, Organisation organisation)
         {
+            var organisationHasUsers = organisation.Users.Any();
+            Policy adminPolicy = null;
+
+            if (!organisationHasUsers){
+                adminPolicy = new Policy{PolicyName = AuthorizationPolicies.AdminPolicy, PolicyClaim = AuthorizationPolicies.AdminClaim};
+            }
+            User newUser = await Task.Run(() =>_unitOfWork.UserRepository.CreateUser(request, organisation, adminPolicy));
+
             using (var transaction = _unitOfWork.UserRepository.BeginTransaction()){
-                IdentityResult result = await _userManager.CreateAsync(newUser, password);
 
-                if (result.Succeeded) {
-                    _unitOfWork.UserRepository.AddAsync(newUser);
-                    organisation.Users.Add(newUser);
+                IdentityResult result = await _userManager.CreateAsync(newUser, request.Password);
 
-                    Dictionary<string, string> tokens  = await GetTokens(newUser);
-
-                    RegistrationResponse response = _mapper.Map<RegistrationResponse>(newUser);
-
-                    tokens.TryGetValue("SecurityToken", out string securityToken);
-                    tokens.TryGetValue("RefreshToken", out string refreshToken);
-
-                    response.Token = securityToken;
-                    response.RefreshToken = refreshToken;
-
-                    _unitOfWork.UserRepository.Commit(transaction);
-
-                    return response;
+                if (!result.Succeeded) {
+                    return new RegistrationResponse { Errors = result.Errors.Select( error => error.Description) };
                 }
-            
-                return new RegistrationResponse { Errors = result.Errors.Select( error => error.Description) };
+
+                if (!organisationHasUsers){
+                    await _userManager.AddClaimAsync(newUser, new Claim(AuthorizationPolicies.AdminClaim, "true"));
+                }
+                
+                _unitOfWork.Complete();
+                Dictionary<string, string> tokens  = await GetTokens(newUser);
+
+                RegistrationResponse response = _mapper.Map<RegistrationResponse>(newUser);
+
+                tokens.TryGetValue("SecurityToken", out string securityToken);
+                tokens.TryGetValue("RefreshToken", out string refreshToken);
+
+                response.Token = securityToken;
+                response.RefreshToken = refreshToken;
+
+                transaction.Commit();
+
+                return response;
             }
         }
 
@@ -160,15 +169,16 @@ namespace AuthServer.Models.Services
 
             storedRefreshToken.Used = true;
             _unitOfWork.RefreshTokenRepository.Update(storedRefreshToken);
+            await _unitOfWork.CompleteAsync();
 
             string userID = validatedToken.Claims.Single(claim => claim.Type == "ID").Value;
-            User user = await Task.Run(() => _unitOfWork.UserRepository.GetUserWithOrganisation(userID));
+            User user = await Task.Run(() => _unitOfWork.UserRepository.GetUserWithDetails(userID));
 
             Dictionary <string, string> tokens = await GetTokens(user);
             tokens.TryGetValue("SecurityToken", out string securityToken);
             tokens.TryGetValue("RefreshToken", out string newRefreshToken);
 
-            _unitOfWork.RefreshTokenRepository.Commit(transaction);
+            transaction.Commit();
 
             return new RefreshTokenResponse {
                 Email = user.Email,
@@ -217,19 +227,15 @@ namespace AuthServer.Models.Services
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim("ID", user.Id.ToString()),
                     new Claim("OrganisationID", user.Organisation.ID.ToString())
-                    // ,
-                    // new Claim(user.Role.Claim, "true")
                 };
 
             var userClaims = await _userManager.GetClaimsAsync(user);
             claims.AddRange(userClaims);
             
-            // var claims = await _userManager.GetClaimsAsync(user);
-            var tokenDescriptor = new SecurityTokenDescriptor() // can be used to specify exactly what the token must include
-            {
+            var tokenDescriptor = new SecurityTokenDescriptor(){
                 // SecurityTokenDescriptor takes in an array of Claims wrapped in Claims Identity in its Subject field
                 // This is how we specify exactly what the token must include, each rule is defined as a new Claim
-                // Each Claim is matched against a registered Claim Name or unregistered "string".
+                // Each Claim is matched against a registered Claim Name or custom "string".
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.Add(_jwtConfig.TokenLifetime),
                 SigningCredentials = new SigningCredentials(
@@ -242,6 +248,7 @@ namespace AuthServer.Models.Services
             RefreshToken refreshToken =  await Task.Run(() => _unitOfWork.RefreshTokenRepository.CreateRefreshToken(token.Id, user.Id));
 
             _unitOfWork.RefreshTokenRepository.AddAsync(refreshToken);
+            _unitOfWork.Complete();
 
             tokens.Add("SecurityToken", tokenHandler.WriteToken(token));
             tokens.Add("RefreshToken", refreshToken.Token);

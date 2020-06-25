@@ -22,7 +22,7 @@ namespace AuthServer.Configurations.ServiceInjectors
 	{
 		public void InjectServices(IConfiguration configuration, IServiceCollection services)
 		{
-            // to avoid needing to rebuild app container each time something has to change
+            // to avoid needing to rebuild docker containers each time something has to change
             // using this way, can inject env vars to containers at runtime
             string DBServer = configuration["DBServer"] ?? "localhost";
             string DBPort = configuration["DBPort"] ?? "3306";
@@ -33,10 +33,13 @@ namespace AuthServer.Configurations.ServiceInjectors
             //TODO: create new standalone server for production
             //TODO: create separate user for production and avoid using root
             //TODO: Research storing sensitive data in Azure DevOps or Equivalent to avoid storing password in plain text
+            //TODO: Implement custom retry logic with strategies and remove transactions
+
             string connection = $"server={DBServer};userid={DBUser};pwd={DBPassword};port={DBPort};database={DBName};";
 
             services.AddDbContextPool<AuthServerContext>(options => options
                 .UseMySql(connection
+                //TODO: Implement custom retry logic with strategies and remove transactions by using Pomelo library and the below lines
                 // , mySqlOptions => mySqlOptions
                 //     .ServerVersion(new Version(8, 0, 18), ServerType.MySql)
                 //     .EnableRetryOnFailure(
@@ -53,6 +56,7 @@ namespace AuthServer.Configurations.ServiceInjectors
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IOrganisationRepository, OrganisationRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IPolicyRepository, PolicyRepository>();
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();
         }

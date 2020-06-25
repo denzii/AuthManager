@@ -19,5 +19,8 @@ namespace AuthServer.Models.Entities
 
 		[Required]
 		virtual public ICollection<User> Users { get; set; }
+
+		[Required]
+		virtual public ICollection<Policy> Policies { get; set; }
 	}
 }

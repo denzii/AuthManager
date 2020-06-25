@@ -78,10 +78,6 @@ namespace AuthServer.Persistence.Repositories
             return _context.Database.BeginTransaction();
         }
 
-        public void Commit(IDbContextTransaction transaction){
-            transaction.Commit();
-        }
-
         public void TrackEntities(IEnumerable<TEntity> entities){
             _context.UpdateRange(entities);
         }

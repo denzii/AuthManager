@@ -13,14 +13,18 @@ namespace AuthServer.Persistence.EntityConfigurations
 		public void Configure(EntityTypeBuilder<Organisation> modelBuilder)
 		{
 			modelBuilder
-				.HasKey(organisation => new {
-				  organisation.ID,
-				  organisation.EstablishedOn 
-			  });
+			.HasKey(organisation => new {
+				organisation.ID,
+				organisation.EstablishedOn 
+			});
 
 			modelBuilder
-				.HasMany(organisation => organisation.Users)
-				.WithOne(user => user.Organisation);
+			.HasMany(organisation => organisation.Users)
+			.WithOne(user => user.Organisation);
+
+			modelBuilder
+			.HasMany(organisation => organisation.Policies)
+			.WithOne(policy => policy.Organisation);
 		}
 	}
 }

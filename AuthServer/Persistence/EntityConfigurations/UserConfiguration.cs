@@ -9,8 +9,12 @@ namespace AuthServer.Persistence.EntityConfigurations
 		public void Configure(EntityTypeBuilder<User> modelBuilder)
 		{			
 			modelBuilder
-				.HasOne(user => user.Organisation)
-				.WithMany(organisation => organisation.Users);
+			.HasOne(user => user.Organisation)
+			.WithMany(organisation => organisation.Users);
+
+			modelBuilder
+			.HasOne(user => user.Policy)
+			.WithMany(policy => policy.Users);
 		}
 	}
 }
