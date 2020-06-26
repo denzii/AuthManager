@@ -11,15 +11,17 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 {
 	public interface IUserRepository : IRepository<User>
 	{
-		IEnumerable<UserDTO> GetAllByOrganisation(int organisationID);
+		IEnumerable<UserDTO> GetAllByOrganisation(string organisationID);
 
-		IEnumerable<User> GetByUserName(string firstName, string lastName, int organisationID);
+         UserDTO GetByOrganisation(string ID, string organisationID);
+
+		IEnumerable<User> GetByUserName(string firstName, string lastName, string organisationID);
         
 		User GetByEmail(string email);
 
 		Task<bool> UserWithEmailExistsAsync(string email);
 
-		User GetUserWithDetails(string ID);
+		User GetWithDetails(string ID, string organisationID);
 
 		User CreateUser(RegistrationRequest request, Organisation organisation, Policy policy);
     }

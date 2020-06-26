@@ -32,7 +32,7 @@ namespace AuthServer.Controllers.Version1
         public async Task<ActionResult<UserDTO>> GetUsers()
         {
             //TODO Add Pagination
-            var organisationID = Convert.ToInt32(HttpContext.GetOrganisationID());
+            var organisationID = HttpContext.GetOrganisationID();
 
             var users = await Task.Run(() =>_unitOfWork.UserRepository.GetAllByOrganisation(organisationID));
 
@@ -43,9 +43,9 @@ namespace AuthServer.Controllers.Version1
 
         // GET: api/v1/Users/{id}
         [HttpGet(ApiRoutes.Users.Get)]
-        public async Task<ActionResult<User>> GetUser(string ID)
+        public async Task<ActionResult<UserDTO>> GetUser(string ID)
         {
-            User user = await Task.Run(() =>_unitOfWork.UserRepository.GetUserWithDetails(ID));
+            UserDTO user = await Task.Run(() =>_unitOfWork.UserRepository.GetByOrganisation(ID, HttpContext.GetOrganisationID()));
 
             if (user == null)
             {

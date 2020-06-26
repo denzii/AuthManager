@@ -19,14 +19,13 @@ namespace AuthServer.Persistence.Migrations
 
             modelBuilder.Entity("AuthServer.Models.Entities.Organisation", b =>
                 {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("ID")
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
                     b.Property<DateTime>("EstablishedOn")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("OrganisationName")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
@@ -37,19 +36,17 @@ namespace AuthServer.Persistence.Migrations
 
             modelBuilder.Entity("AuthServer.Models.Entities.Policy", b =>
                 {
-                    b.Property<string>("ID")
+                    b.Property<string>("Name")
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
-                    b.Property<int?>("OrganisationID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PolicyClaim")
+                    b.Property<string>("Claim")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
-                    b.Property<string>("PolicyName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("OrganisationID")
+                        .IsRequired()
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
-                    b.HasKey("ID");
+                    b.HasKey("Name");
 
                     b.HasIndex("OrganisationID");
 
@@ -133,8 +130,9 @@ namespace AuthServer.Persistence.Migrations
                         .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
-                    b.Property<int>("OrganisationID")
-                        .HasColumnType("int");
+                    b.Property<string>("OrganisationID")
+                        .IsRequired()
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
@@ -145,7 +143,7 @@ namespace AuthServer.Persistence.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<string>("PolicyID")
+                    b.Property<string>("PolicyName")
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
                     b.Property<DateTime>("RegisteredOn")
@@ -177,7 +175,7 @@ namespace AuthServer.Persistence.Migrations
 
                     b.HasIndex("OrganisationID");
 
-                    b.HasIndex("PolicyID");
+                    b.HasIndex("PolicyName");
 
                     b.ToTable("AspNetUsers");
                 });
@@ -319,7 +317,8 @@ namespace AuthServer.Persistence.Migrations
                     b.HasOne("AuthServer.Models.Entities.Organisation", "Organisation")
                         .WithMany("Policies")
                         .HasForeignKey("OrganisationID")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AuthServer.Models.Entities.RefreshToken", b =>
@@ -341,7 +340,7 @@ namespace AuthServer.Persistence.Migrations
 
                     b.HasOne("AuthServer.Models.Entities.Policy", "Policy")
                         .WithMany("Users")
-                        .HasForeignKey("PolicyID")
+                        .HasForeignKey("PolicyName")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

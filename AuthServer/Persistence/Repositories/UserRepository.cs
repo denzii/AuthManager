@@ -17,7 +17,7 @@ namespace AuthServer.Persistence.Repositories
         {
         }
 
-        public IEnumerable<UserDTO> GetAllByOrganisation(int organisationID)
+        public IEnumerable<UserDTO> GetAllByOrganisation(string organisationID)
         {
             return AppContext.Users
             .Where(u => u.Organisation.ID == organisationID)
@@ -29,9 +29,24 @@ namespace AuthServer.Persistence.Repositories
             .Select(u => new UserDTO{
                 FirstName = u.FirstName,
                 LastName = u.LastName,
-                OrganisationName = u.Organisation.OrganisationName,
+                OrganisationName = u.Organisation.Name,
                 PolicyName = u.Policy.Name
             });
+        }
+
+        public UserDTO GetByOrganisation(string ID, string organisationID)
+        {
+            return AppContext.Users
+            .Where(user => user.Id == ID && user.Organisation.ID == organisationID)
+            ?.Include(user => user.Organisation)
+            .Include(user => user.Policy)
+            .Select(user => new UserDTO{
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                OrganisationName = user.Organisation.Name,
+                PolicyName = user.Policy.Name
+            })
+            .SingleOrDefault();
         }
 
         public User GetByEmail(string email)
@@ -41,22 +56,16 @@ namespace AuthServer.Persistence.Repositories
             .SingleOrDefault(u => u.Email == email);
         }
 
-        public User GetUserWithDetails(string ID)
+        public User GetWithDetails(string ID, string organisationID)
         {
             return AppContext.Users
+            .Where(user => user.Id == ID && user.Organisation.ID == organisationID)
             .Include(user => user.Organisation)
             .Include(user => user.Policy)
-            .SingleOrDefault(u => u.Id == ID);
-        }
-        public IEnumerable<User> GetAllWithDetails(string ID)
-        {
-            return AppContext.Users
-            .Include(user => user.Organisation)
-            .Include(user => user.Policy)
-            .ToList();
+            .SingleOrDefault();
         }
 
-        public IEnumerable<User> GetByUserName(string firstName, string lastName, int organisationID)
+        public IEnumerable<User> GetByUserName(string firstName, string lastName, string organisationID)
         {
            return AppContext.Users
             .Where(u => u.FirstName == firstName && u.LastName == lastName && u.Organisation.ID == organisationID)

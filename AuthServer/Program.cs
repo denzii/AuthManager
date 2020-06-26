@@ -44,14 +44,7 @@ namespace AuthServer
 				try
 				{
 					AuthServerContext context = services.GetRequiredService<AuthServerContext>();
-					context.Database.Migrate();
-
-					if (!context.Policies.Any()){
-						context.Policies.Add(new Policy{
-							Name = AuthorizationPolicies.AdminPolicy,
-							Claim = AuthorizationPolicies.AdminClaim
-						});
-					}				
+					context.Database.Migrate();			
 				}
 				catch (Exception e)
 				{

@@ -13,6 +13,7 @@ namespace AuthServer.Contracts.Version1
 		public const string APIVersion = "v1";
 		public const string BaseRoute = EndpointRoot + "/" + APIVersion;
 		public const string Identifier = "{ID}";
+		public const string Name = "{Name}";
 
 		public static class Authentication
 		{
@@ -40,7 +41,7 @@ namespace AuthServer.Contracts.Version1
 		{
 			public const string GetAll = BaseRoute + "/" + nameof(Policies) + "/";
 			public const string Post = BaseRoute + "/" + nameof(Policies);
-            public const string Get = BaseRoute + "/" + nameof(Policies) + "/" + Identifier;
+            public const string Get = BaseRoute + "/" + nameof(Policies) + "/" + Name;
         }
 
 

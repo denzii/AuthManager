@@ -63,7 +63,7 @@ namespace Tests.IntegrationTests
 
             await _httpClient.PostAsJsonAsync(ApiRoutes.Organisations.Post, new Organisations.PostRequest
             {
-                OrganisationName = ORGANISATION_NAME
+                Name = ORGANISATION_NAME
             });
 
             return await _httpClient.PostAsJsonAsync(ApiRoutes.Authentication.Register, new RegistrationRequest

@@ -9,12 +9,12 @@ namespace AuthServer.Contracts.Version1.RequestContracts
 	{
 		public class PostRequest
 		{
-			public string OrganisationName { get; set; }
+			public string Name { get; set; }
 		}
 
 		public class PatchRequest
 		{
-			public string OrganisationName { get; set; }
+			public string Name { get; set; }
 		}
 
 		public class DeleteRequest

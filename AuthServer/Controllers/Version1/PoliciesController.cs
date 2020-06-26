@@ -7,6 +7,7 @@ using AuthServer.Configurations.CustomExtensions;
 using AuthServer.Contracts.Version1;
 using AuthServer.Models.Entities;
 using AuthServer.Persistence;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,32 +22,40 @@ namespace AuthServer.Controllers.Version1
     public class PoliciesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public PoliciesController(IUnitOfWork unitOfWork)
+
+        public PoliciesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         // POST: api/v1/Policies
         [HttpPost(ApiRoutes.Policies.Post)]
         public async Task<ActionResult<PostResponse>> PostPolicy([FromBody] PostRequest request)
         {
+            string organisationID = HttpContext.GetOrganisationID();
             bool policyExists = await Task.Run(() => _unitOfWork.PolicyRepository.PolicyExist(request.Name, HttpContext.GetOrganisationID()));
+            Organisation organisation = _unitOfWork.OrganisationRepository.Get(Convert.ToInt32(organisationID));
 
             if (policyExists)
             {
                 return BadRequest(new PostResponse{Error = "Policy with the specified name already exist within your organisation"});
             }
 
-            Policy policy = new Policy{Name = request.Name, Claim = request.Claim};
+            Policy policy = new Policy{Name = request.Name, Claim = request.Claim, Organisation = organisation};
             
-            _unitOfWork.PolicyRepository.AddAsync(policy);
+            organisation.Policies = new List<Policy>{policy};
+
+             _unitOfWork.PolicyRepository.AddAsync(policy);
+             _unitOfWork.OrganisationRepository.TrackEntity(organisation);
             await _unitOfWork.CompleteAsync();
 
-            PostResponse response = new PostResponse{ Name = policy.Name, Claim = policy.Claim, ID = policy.ID };
+            PostResponse response = new PostResponse{ Name = policy.Name, Claim = policy.Claim };
 
             string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-            string locationUri = baseUrl + "/" + ApiRoutes.Policies.Get.Replace("{ID}", response.ID.ToString());
+            string locationUri = baseUrl + "/" + ApiRoutes.Policies.Get.Replace("{Name}", response.Name);
 
             return Created(locationUri, response);
         }
@@ -59,7 +68,7 @@ namespace AuthServer.Controllers.Version1
 
             if (policy == null)
             {
-                return NotFound("Policy with the specified name does not exist");
+                return NotFound("Policy with the specified ID does not exist");
             }
 
             return policy;
@@ -67,7 +76,7 @@ namespace AuthServer.Controllers.Version1
 
         // GET: api/v1/Policies/
         [HttpGet(ApiRoutes.Policies.GetAll)]
-        public async Task<ActionResult<Policy>> GetPolicies(string ID)
+        public async Task<ActionResult<Policy>> GetPolicies()
         {
             IEnumerable<Policy> policies = await Task.Run(() => _unitOfWork.PolicyRepository.GetAllByOrganisation(HttpContext.GetOrganisationID()));
 
@@ -76,7 +85,7 @@ namespace AuthServer.Controllers.Version1
                 return NotFound("No policies exist for your organisation");
             }
 
-            return Ok(policies);
+            return Ok(policies.Select(policy => _mapper.Map<GetAllResponse>(policy)));
         }
     }
 }

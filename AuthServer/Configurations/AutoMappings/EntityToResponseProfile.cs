@@ -15,6 +15,7 @@ namespace AuthServer.Configurations.AutoMappings
 			CreateMap<User, Authentication.LoginResponse>();
 			CreateMap<Organisation, Organisations.PostResponse>();
 			CreateMap<User, Authentication.RegistrationResponse>();
+			CreateMap<Policy, Policies.GetAllResponse>();
 		}
 	}
 }

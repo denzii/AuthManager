@@ -19,7 +19,6 @@ using AuthServer.Configurations;
 namespace AuthServer.Controllers.Version1
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class OrganisationsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -44,17 +43,24 @@ namespace AuthServer.Controllers.Version1
 
         // GET: api/v1/Organisations/{id}
         [HttpGet(ApiRoutes.Organisations.Get)]
-        [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Policy = "OrganisationManager")]
         public async Task<ActionResult<Organisation>> GetOrganisation(string ID)
         {
-            Organisation organisation = await _unitOfWork.OrganisationRepository.FindAsync(Convert.ToInt32(ID));
+            try{
+                Organisation organisation = await _unitOfWork.OrganisationRepository.FindAsync(Convert.ToInt32(ID));
 
-            if (organisation == null)
-            {
+                if (organisation == null)
+                {
                 return NotFound();
+                }
+
+            return organisation;  
+
+            }catch(Exception e){
+                return BadRequest(e.Message);
             }
 
-            return organisation;
         }
 
 
@@ -66,16 +72,26 @@ namespace AuthServer.Controllers.Version1
             // Currently publicly accessible.
             try
             {
-                Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.OrganisationName);
+                Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.Name);
 
                 if (organisation != null)
                 {
                     return BadRequest("An organisation with the specified name already exists");
                 }
 
+                //organisationID is guid since a reference to the organisationID is required before the organisation is created
+                // (both of the related entities have to be generated together)
+                string organisationID = Guid.NewGuid().ToString();
+
+                var policy = new Policy{Name = AuthorizationPolicies.AdminPolicy, Claim = AuthorizationPolicies.AdminClaim, OrganisationID = organisationID};
+                
+                var organisationPolicies = new List<Policy>{policy};
+
                 organisation = new Organisation{
-                    OrganisationName = request.OrganisationName,
-                    EstablishedOn = DateTime.Now
+                    ID = organisationID,
+                    Name = request.Name,
+                    EstablishedOn = DateTime.Now,
+                    Policies = organisationPolicies
                 };
 
                 _unitOfWork.OrganisationRepository.AddAsync(organisation);
@@ -90,7 +106,7 @@ namespace AuthServer.Controllers.Version1
             }
             catch(Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(e.InnerException.Message);
             }
            
         }

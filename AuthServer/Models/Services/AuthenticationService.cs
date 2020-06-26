@@ -153,6 +153,8 @@ namespace AuthServer.Models.Services
 
             string jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
 
+            string organisationID = validatedToken.Claims.Single(x => x.Type == "OrganisationID").Value;
+
             RefreshToken storedRefreshToken = await _unitOfWork.RefreshTokenRepository.GetRefreshToken(refreshToken);
 
             if (expiryDateTimeUtc > DateTime.UtcNow
@@ -173,7 +175,7 @@ namespace AuthServer.Models.Services
             await _unitOfWork.CompleteAsync();
 
             string userID = validatedToken.Claims.Single(claim => claim.Type == "ID").Value;
-            User user = await Task.Run(() => _unitOfWork.UserRepository.GetUserWithDetails(userID));
+            User user = await Task.Run(() => _unitOfWork.UserRepository.GetWithDetails(userID, organisationID));
 
             Dictionary <string, string> tokens = await GetTokens(user);
             tokens.TryGetValue("SecurityToken", out string securityToken);

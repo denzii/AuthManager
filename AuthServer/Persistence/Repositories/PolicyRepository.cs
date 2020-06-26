@@ -20,21 +20,25 @@ namespace AuthServer.Persistence.Repositories
         public IEnumerable<Policy> GetAllByOrganisation(string organisationID)
         {
             return AppContext.Policies
-            .Where(policy => policy.Organisation.ID == Convert.ToInt32(organisationID))
-            ?.Include(policy => policy.Organisation);
+            .Where(policy => policy.Organisation.ID == organisationID)
+            .ToList();
         }
 
-        public Policy GetByOrganisation(string ID, string organisationID)
+        public Policy GetByOrganisation(string name, string organisationID)
         {
+            var x = AppContext.Policies.ToList();
             return AppContext.Policies
-            .Where(policy => policy.ID == ID && policy.Organisation.ID == Convert.ToInt32(organisationID))
+            .Where(policy => policy.Name == name && policy.Organisation.ID == organisationID)
+            ?.Include(policy => policy.Users)
             .SingleOrDefault();
         }
 
         public Task<bool> PolicyExist(string name, string organisationID)
         {
+            var x = AppContext.Policies.ToList();
+            
             return AppContext.Policies
-            .Where(policy => policy.Name == name && policy.Organisation.ID == Convert.ToInt32(organisationID))
+            .Where(policy => policy.Name == name && policy.Organisation.ID == organisationID)
             .AnyAsync();
         }
 

@@ -51,6 +51,7 @@ namespace AuthServer.Configurations.ServiceInjectors
         
              services.AddAuthorization(options => {
                  options.AddPolicy(AuthorizationPolicies.AdminPolicy, builder => builder.RequireClaim(AuthorizationPolicies.AdminClaim, "true"));
+                 options.AddPolicy("OrganisationManager", builder => builder.RequireClaim("IsOrganisationManager", "true"));
                  });
         }
 	}

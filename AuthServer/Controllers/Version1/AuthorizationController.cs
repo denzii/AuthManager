@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using AuthServer.Models.Entities;
 using System.Security.Claims;
 using AuthServer.Configurations;
+using AuthServer.Configurations.CustomExtensions;
 
 namespace AuthServer.Controllers.Version1
 {
@@ -45,10 +46,10 @@ namespace AuthServer.Controllers.Version1
                 //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
             try
             {
-                var user = await Task.Run(() =>_unitOfWork.UserRepository.GetUserWithDetails(request.UserID));
-                var policy = await Task.Run(() => _unitOfWork.PolicyRepository.Get(Int32.Parse(request.PolicyID)));
+                var user = await Task.Run(() =>_unitOfWork.UserRepository.GetWithDetails(request.UserID, HttpContext.GetOrganisationID()));
+                var policy = await Task.Run(() => _unitOfWork.PolicyRepository.Get(Int32.Parse(request.PolicyName)));
                 
-                if (user == null || policy == null || user.Policy.ID == policy.ID){
+                if (user == null || policy == null || user.Policy.Name == policy.Name){
                     return Ok(new AssignmentResponse{
                         Error = "Permission/User does not exist or already has the permission."
                         });
@@ -64,7 +65,7 @@ namespace AuthServer.Controllers.Version1
                 transaction.Commit();
                 var response = new AssignmentResponse{
                     UserID = user.Id,
-                    PolicyID = policy.ID,
+                    PolicyName = policy.Name,
                     Info = "Permission has been granted, please log-in again for the action to take effect."
 
                 };
@@ -85,7 +86,7 @@ namespace AuthServer.Controllers.Version1
                 //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
             try
             {
-                var user = await Task.Run(() =>_unitOfWork.UserRepository.GetUserWithDetails(request.UserID));
+                var user = await Task.Run(() =>_unitOfWork.UserRepository.GetWithDetails(request.UserID, HttpContext.GetOrganisationID()));
 
                 if (user == null || user.Policy == null ){
                     return Ok(new UnassignmentResponse{Error = "User does not exist or does not own a permission."});

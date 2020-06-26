@@ -10,10 +10,10 @@ namespace AuthServer.Models.Entities
 	public class Organisation
 	{
 		[Key, Column(Order = 0)]
-		public int ID { get; set; }
+		public string ID { get; set; }
 
 		[Required]
-		public string OrganisationName { get; set; }
+		public string Name { get; set; }
 
 		public DateTime EstablishedOn { get; set; }
 
