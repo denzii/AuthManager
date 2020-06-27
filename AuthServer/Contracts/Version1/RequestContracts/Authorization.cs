@@ -6,8 +6,6 @@ namespace AuthServer.Contracts.Version1.RequestContracts
         {
             public string UserID { get; set; }
             public string PolicyName { get; set; }
-            public string Info { get; set; }
-            public string Error { get; set; }
         }
 
         public class UnassignmentRequest

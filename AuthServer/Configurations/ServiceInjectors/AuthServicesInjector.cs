@@ -19,6 +19,7 @@ namespace AuthServer.Configurations.ServiceInjectors
             Console.WriteLine(configuration.GetSection(nameof(JWTBearerAuthConfig)));
             services.AddSingleton(jwtBearerAuthConfig);
 
+
             //JWT Bearer with Azure Active Directory for client app authentication
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             //    .AddJwtBearer(options => {

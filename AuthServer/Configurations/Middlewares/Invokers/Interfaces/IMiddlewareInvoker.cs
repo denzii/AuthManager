@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthServer.Configurations.MiddlewareInvokers.Interfaces
+namespace AuthServer.Configurations.Middlewares.Invokers.Interfaces
 {
 	public interface IMiddlewareInvoker
 	{ 

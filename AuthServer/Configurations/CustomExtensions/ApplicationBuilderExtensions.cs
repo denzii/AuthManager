@@ -1,4 +1,4 @@
-﻿using AuthServer.Configurations.MiddlewareInvokers.Interfaces;
+﻿using AuthServer.Configurations.Middlewares.Invokers.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using System;

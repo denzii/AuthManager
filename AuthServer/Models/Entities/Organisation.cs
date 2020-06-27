@@ -18,9 +18,9 @@ namespace AuthServer.Models.Entities
 		public DateTime EstablishedOn { get; set; }
 
 		[Required]
-		virtual public ICollection<User> Users { get; set; }
+		virtual public ICollection<User> Users { get; set; } = new List<User>();
 
 		[Required]
-		virtual public ICollection<Policy> Policies { get; set; }
+		virtual public ICollection<Policy> Policies { get; set; } = new List<Policy>();
 	}
 }

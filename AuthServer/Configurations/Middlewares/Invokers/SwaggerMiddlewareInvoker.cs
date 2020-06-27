@@ -1,10 +1,10 @@
 ﻿using AuthServer.Configurations.DataTransferObjects;
-using AuthServer.Configurations.MiddlewareInvokers.Interfaces;
+using AuthServer.Configurations.Middlewares.Invokers.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AuthServer.Configurations.AppBuilders
+namespace AuthServer.Configurations.Middlewares.Invokers
 {
 	public class SwaggerMiddlewareInvoker : IMiddlewareInvoker
 	{

@@ -35,24 +35,25 @@ namespace AuthServer.Controllers.Version1
         [HttpPost(ApiRoutes.Policies.Post)]
         public async Task<ActionResult<PostResponse>> PostPolicy([FromBody] PostRequest request)
         {
+
             string organisationID = HttpContext.GetOrganisationID();
             bool policyExists = await Task.Run(() => _unitOfWork.PolicyRepository.PolicyExist(request.Name, HttpContext.GetOrganisationID()));
-            Organisation organisation = _unitOfWork.OrganisationRepository.Get(Convert.ToInt32(organisationID));
+            Organisation organisation = await _unitOfWork.OrganisationRepository.GetByUuid(organisationID);
 
             if (policyExists)
             {
-                return BadRequest(new PostResponse{Error = "Policy with the specified name already exist within your organisation"});
+                return BadRequest(new PostResponse { Error = "Policy with the specified name already exist within your organisation" });
             }
 
-            Policy policy = new Policy{Name = request.Name, Claim = request.Claim, Organisation = organisation};
-            
-            organisation.Policies = new List<Policy>{policy};
+            Policy policy = new Policy { Name = request.Name, Claim = request.Claim, OrganisationID = organisationID };
 
-             _unitOfWork.PolicyRepository.AddAsync(policy);
-             _unitOfWork.OrganisationRepository.TrackEntity(organisation);
+            organisation.Policies.Add(policy);
+
+            await _unitOfWork.PolicyRepository.AddAsync(policy);
+            _unitOfWork.OrganisationRepository.TrackEntity(organisation);
             await _unitOfWork.CompleteAsync();
 
-            PostResponse response = new PostResponse{ Name = policy.Name, Claim = policy.Claim };
+            PostResponse response = new PostResponse { Name = policy.Name, Claim = policy.Claim };
 
             string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
             string locationUri = baseUrl + "/" + ApiRoutes.Policies.Get.Replace("{Name}", response.Name);
@@ -60,23 +61,23 @@ namespace AuthServer.Controllers.Version1
             return Created(locationUri, response);
         }
 
-        // GET: api/v1/Policies/{id}
+        // GET: api/v1/Policies/{Name}
         [HttpGet(ApiRoutes.Policies.Get)]
-        public async Task<ActionResult<Policy>> GetPolicy(string ID)
+        public async Task<ActionResult<GetResponse>> GetPolicy(string name)
         {
-            Policy policy = await Task.Run(() => _unitOfWork.PolicyRepository.GetByOrganisation(ID, HttpContext.GetOrganisationID()));
+            Policy policy = await Task.Run(() => _unitOfWork.PolicyRepository.GetByOrganisation(name, HttpContext.GetOrganisationID()));
 
             if (policy == null)
             {
                 return NotFound("Policy with the specified ID does not exist");
             }
 
-            return policy;
+            return _mapper.Map<GetResponse>(policy);
         }
 
         // GET: api/v1/Policies/
         [HttpGet(ApiRoutes.Policies.GetAll)]
-        public async Task<ActionResult<Policy>> GetPolicies()
+        public async Task<ActionResult<GetAllResponse>> GetPolicies()
         {
             IEnumerable<Policy> policies = await Task.Run(() => _unitOfWork.PolicyRepository.GetAllByOrganisation(HttpContext.GetOrganisationID()));
 

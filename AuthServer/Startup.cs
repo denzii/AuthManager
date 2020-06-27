@@ -13,6 +13,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using AuthServer.Configurations.CustomExtensions;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AuthServer
 {
@@ -28,11 +32,13 @@ namespace AuthServer
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddControllers();
+			services.AddMvc().AddFluentValidation(config => config.RegisterValidatorsFromAssemblyContaining<Startup>())
+			.SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
             services.InjectRegisteredServices(Configuration);
 		}
 
-		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
 		{
 			if (env.IsDevelopment())
 			{
@@ -46,6 +52,7 @@ namespace AuthServer
 			app.UseHttpsRedirection();
 
             app.UseStaticFiles();
+			app.UseSerilogRequestLogging();
             app.UseRouting();
 
             app.UseAuthorization();

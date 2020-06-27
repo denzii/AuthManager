@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AuthServer.Models.Entities;
+using AuthServer.Persistence.EntityConfigurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,9 @@ namespace AuthServer.Persistence.Contexts
             {
                 foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
             }
+                modelBuilder.ApplyConfiguration(new OrganisationConfiguration());
+                modelBuilder.ApplyConfiguration(new PolicyConfiguration());
+                modelBuilder.ApplyConfiguration(new UserConfiguration());
         }
 
 		public AuthServerContext(DbContextOptions<AuthServerContext> options)

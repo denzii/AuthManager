@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace AuthServer.Persistence.Repositories.Interfaces
@@ -20,7 +21,7 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 
         void Add(TEntity entity);
 
-        void AddAsync(TEntity entity);
+        ValueTask<EntityEntry<TEntity>> AddAsync(TEntity entity);
 
         void AddRange(IEnumerable<TEntity> entities);
 

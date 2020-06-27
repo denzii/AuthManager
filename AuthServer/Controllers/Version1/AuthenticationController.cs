@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static AuthServer.Contracts.Version1.RequestContracts.Authentication;
 using static AuthServer.Contracts.Version1.ResponseContracts.Authentication;
+using Serilog;
 
 namespace AuthServer.Controllers.Version1
 {
@@ -27,68 +28,42 @@ namespace AuthServer.Controllers.Version1
         [HttpPost(ApiRoutes.Authentication.Register)]
         public async Task<IActionResult> Register([FromBody] RegistrationRequest request)
         {
-            try
-            {
-                RegistrationResponse response = await _authService.RegisterUserAsync(request);
+            RegistrationResponse response = await _authService.RegisterUserAsync(request);
                 
-                if (response.Errors == null){
-                    string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-                    string locationUri = baseUrl + "/" + ApiRoutes.Users.Get.Replace("{ID}", response.Id.ToString());
+            if (response.Errors == null){
+                string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+                string locationUri = baseUrl + "/" + ApiRoutes.Users.Get.Replace("{ID}", response.Id.ToString());
 
-                    return Created(locationUri, response);
-                }
-
-                return Ok(response);
+                return Created(locationUri, response);
             }
-            catch (Exception e) {
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    e.InnerException.Message + e.StackTrace
-                    );
-            }   
+
+            return Ok(response);
         }
 
         [HttpPost(ApiRoutes.Authentication.Login)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            try
-            {
-                LoginResponse response = await Task.Run(() => _authService.LoginUserAsync(request));
+            LoginResponse response = await Task.Run(() => _authService.LoginUserAsync(request));
 
-                if (response.Error != null)
-                {
-                    return BadRequest(response.Error);
-                }
-
-                return Ok(response);
-            }
-            catch(Exception e)
+            if (response.Error != null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message + e.StackTrace);
+                return BadRequest(response.Error);
             }
+
+            return Ok(response);
         }
 
         [HttpPost(ApiRoutes.Authentication.Refresh)]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            try
-            {
-                RefreshTokenResponse response = await _authService.RefreshTokenAsync(request.Token, request.RefreshToken);
+            RefreshTokenResponse response = await _authService.RefreshTokenAsync(request.Token, request.RefreshToken);
 
-                if (response.Error != null)
-                {
-                    return BadRequest(response.Error);
-                }
-
-                return Ok(response);
-            }
-            catch (Exception e)
+            if (response.Error != null)
             {
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    e.InnerException + e.StackTrace
-                    );
+                return BadRequest(response.Error);
             }
+
+            return Ok(response);
         }
     }
 }

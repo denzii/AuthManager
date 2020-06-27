@@ -24,13 +24,12 @@ namespace AuthServer.Persistence.Repositories
             .ToList();
         }
 
-        public Policy GetByOrganisation(string name, string organisationID)
+        public Task<Policy> GetByOrganisation(string name, string organisationID)
         {
-            var x = AppContext.Policies.ToList();
             return AppContext.Policies
             .Where(policy => policy.Name == name && policy.Organisation.ID == organisationID)
             ?.Include(policy => policy.Users)
-            .SingleOrDefault();
+            .SingleOrDefaultAsync();
         }
 
         public Task<bool> PolicyExist(string name, string organisationID)

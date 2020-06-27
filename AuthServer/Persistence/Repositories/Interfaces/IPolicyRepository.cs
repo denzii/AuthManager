@@ -8,7 +8,7 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 {
     public interface IPolicyRepository : IRepository<Policy>
     {
-        Policy GetByOrganisation(string ID, string organisationID);
+        Task<Policy> GetByOrganisation(string ID, string organisationID);
 
         IEnumerable<Policy> GetAllByOrganisation (string organisationID);
         Task<bool> PolicyExist(string name, string organisationID);

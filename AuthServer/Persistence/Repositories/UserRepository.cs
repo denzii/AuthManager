@@ -17,52 +17,48 @@ namespace AuthServer.Persistence.Repositories
         {
         }
 
-        public IEnumerable<UserDTO> GetAllByOrganisation(string organisationID)
+        public Task<List<UserDTO>> GetAllByOrganisation(string organisationID)
         {
             return AppContext.Users
-            .Where(u => u.Organisation.ID == organisationID)
-            ?.Include(u => u.Organisation)
-            .Include(u => u.Policy)
-            .OrderBy(u => u.FirstName)
-            .ThenBy(u => u.LastName)
-            .ToList()
-            .Select(u => new UserDTO{
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                OrganisationName = u.Organisation.Name,
-                PolicyName = u.Policy.Name
-            });
+            .Where(user => user.Organisation.ID == organisationID)
+            .Select(user => new UserDTO{
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PolicyName = user.Policy != null ? user.Policy.Name : null
+            }).ToListAsync();
         }
 
-        public UserDTO GetByOrganisation(string ID, string organisationID)
+        public Task<UserDTO> GetByOrganisation(string ID, string organisationID)
         {
             return AppContext.Users
             .Where(user => user.Id == ID && user.Organisation.ID == organisationID)
             ?.Include(user => user.Organisation)
             .Include(user => user.Policy)
             .Select(user => new UserDTO{
+                Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                OrganisationName = user.Organisation.Name,
-                PolicyName = user.Policy.Name
+                PolicyName = user.Policy != null ? user.Policy.Name : null
             })
-            .SingleOrDefault();
+            .SingleOrDefaultAsync();
         }
 
-        public User GetByEmail(string email)
+        public Task<User> GetByEmail(string email)
         {
             return AppContext.Users
-            .Include(u => u.Organisation)
-            .SingleOrDefault(u => u.Email == email);
+            .Include(user => user.Organisation)
+            .Include(user => user.Policy)
+            .SingleOrDefaultAsync(user => user.Email == email);
         }
 
-        public User GetWithDetails(string ID, string organisationID)
+        public Task<User> GetWithDetails(string ID, string organisationID)
         {
             return AppContext.Users
             .Where(user => user.Id == ID && user.Organisation.ID == organisationID)
             .Include(user => user.Organisation)
             .Include(user => user.Policy)
-            .SingleOrDefault();
+            .SingleOrDefaultAsync();
         }
 
         public IEnumerable<User> GetByUserName(string firstName, string lastName, string organisationID)

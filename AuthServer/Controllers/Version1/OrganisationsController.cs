@@ -30,12 +30,12 @@ namespace AuthServer.Controllers.Version1
             _mapper = mapper;
         }
 
-        // // GET: api/v1/Organisations
+        // //// GET: api/v1/Organisations
         // [HttpGet(ApiRoutes.Organisations.GetAll)]
-        // [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
+        // // [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
 
-        //TODO implement internal JWT and roles so only SuperUser could access this endpoint
-        // Do not allow person of organisation access all organisation data (This app will be used on many individual projects independent of each other.)
+        // ////TODO implement internal JWT and roles so only SuperUser could access this endpoint
+        // ////Do not allow person of organisation access all organisation data (This app will be used on many individual projects independent of each other.)
         // public async Task<ActionResult<IEnumerable<Organisation>>> GetOrganisations()
         // {        
         //     return Ok(await _unitOfWork.OrganisationRepository.GetAllWithUsers());
@@ -44,23 +44,17 @@ namespace AuthServer.Controllers.Version1
         // GET: api/v1/Organisations/{id}
         [HttpGet(ApiRoutes.Organisations.Get)]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [Authorize(Policy = "OrganisationManager")]
-        public async Task<ActionResult<Organisation>> GetOrganisation(string ID)
+        [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
+        public async Task<ActionResult<GetResponse>> GetOrganisation(string ID)
         {
-            try{
-                Organisation organisation = await _unitOfWork.OrganisationRepository.FindAsync(Convert.ToInt32(ID));
+            Organisation organisation = await _unitOfWork.OrganisationRepository.GetByUuid(ID);
 
-                if (organisation == null)
-                {
+            if (organisation == null)
+            {
                 return NotFound();
-                }
-
-            return organisation;  
-
-            }catch(Exception e){
-                return BadRequest(e.Message);
             }
 
+            return _mapper.Map<GetResponse>(organisation);
         }
 
 
@@ -70,45 +64,41 @@ namespace AuthServer.Controllers.Version1
         {
             //TODO Implement internal JWT to authorize clients and selectively allow hitting this endpoint on
             // Currently publicly accessible.
-            try
+
+            Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.Name);
+
+            if (organisation != null)
             {
-                Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.Name);
-
-                if (organisation != null)
-                {
-                    return BadRequest("An organisation with the specified name already exists");
-                }
-
-                //organisationID is guid since a reference to the organisationID is required before the organisation is created
-                // (both of the related entities have to be generated together)
-                string organisationID = Guid.NewGuid().ToString();
-
-                var policy = new Policy{Name = AuthorizationPolicies.AdminPolicy, Claim = AuthorizationPolicies.AdminClaim, OrganisationID = organisationID};
-                
-                var organisationPolicies = new List<Policy>{policy};
-
-                organisation = new Organisation{
-                    ID = organisationID,
-                    Name = request.Name,
-                    EstablishedOn = DateTime.Now,
-                    Policies = organisationPolicies
-                };
-
-                _unitOfWork.OrganisationRepository.AddAsync(organisation);
-                await _unitOfWork.CompleteAsync();
-
-                PostResponse response = _mapper.Map<PostResponse>(organisation);
-
-                string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-                string locationUri = baseUrl + "/" + ApiRoutes.Organisations.Get.Replace("{ID}", response.ID.ToString());
-
-                return Created(locationUri, response);
+                return BadRequest("An organisation with the specified name already exists");
             }
-            catch(Exception e)
+
+            //organisationID is guid since a reference to the organisationID is required before the organisation is created
+            // (both of the related entities have to be generated together)
+            string organisationID = Guid.NewGuid().ToString();
+
+            var policy = new Policy { Name = AuthorizationPolicies.AdminPolicy, Claim = AuthorizationPolicies.AdminClaim, OrganisationID = organisationID };
+
+            var organisationPolicies = new List<Policy> { policy };
+
+            organisation = new Organisation
             {
-                return BadRequest(e.InnerException.Message);
-            }
-           
+                ID = organisationID,
+                Name = request.Name,
+                EstablishedOn = DateTime.Now,
+                Policies = organisationPolicies
+            };
+
+            await _unitOfWork.OrganisationRepository.AddAsync(organisation);
+            await _unitOfWork.PolicyRepository.AddAsync(policy);
+            await _unitOfWork.CompleteAsync();
+
+            PostResponse response = _mapper.Map<PostResponse>(organisation);
+
+            string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+            string locationUri = baseUrl + "/" + ApiRoutes.Organisations.Get.Replace("{ID}", response.ID.ToString());
+
+            return Created(locationUri, response);
+
         }
     }
 }

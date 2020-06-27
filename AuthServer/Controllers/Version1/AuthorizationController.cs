@@ -44,37 +44,33 @@ namespace AuthServer.Controllers.Version1
                 //     Implement  auto re-login  to update claims info in the jwt
                 //     Or invalidate jwt so user must login again 
                 //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
-            try
-            {
-                var user = await Task.Run(() =>_unitOfWork.UserRepository.GetWithDetails(request.UserID, HttpContext.GetOrganisationID()));
-                var policy = await Task.Run(() => _unitOfWork.PolicyRepository.Get(Int32.Parse(request.PolicyName)));
-                
-                if (user == null || policy == null || user.Policy.Name == policy.Name){
-                    return Ok(new AssignmentResponse{
-                        Error = "Permission/User does not exist or already has the permission."
-                        });
-                }
-                
-                var transaction = _unitOfWork.UserRepository.BeginTransaction();
 
-                user.Policy = policy;
-                _unitOfWork.UserRepository.AddAsync(user);
-
-                await _userManager.AddClaimAsync(user,new Claim(AuthorizationPolicies.AdminClaim, "true"));
+            var organisationID = HttpContext.GetOrganisationID();
+            var user = await _unitOfWork.UserRepository.GetWithDetails(request.UserID, organisationID);
+            var policy = await  _unitOfWork.PolicyRepository.GetByOrganisation(request.PolicyName, organisationID);
                 
-                transaction.Commit();
-                var response = new AssignmentResponse{
-                    UserID = user.Id,
-                    PolicyName = policy.Name,
-                    Info = "Permission has been granted, please log-in again for the action to take effect."
-
-                };
-            
-                return Ok(response);
+            if (user == null || policy == null || user.Policy?.Name == policy.Name){
+                return Ok(new AssignmentResponse{
+                    Error = "Permission/User does not exist or already has the permission."
+                    });
             }
-            catch (Exception e) {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message + e.StackTrace );
-            }   
+                
+            var transaction = _unitOfWork.UserRepository.BeginTransaction();
+
+            user.Policy = policy;
+            await _unitOfWork.UserRepository.AddAsync(user);
+
+            await _userManager.AddClaimAsync(user,new Claim(policy.Claim, "true"));
+                
+            transaction.Commit();
+            var response = new AssignmentResponse{
+                UserID = user.Id,
+                PolicyName = policy.Name,
+                Info = "Permission has been granted, please log-in again for the action to take effect."
+            };
+            
+            return Ok(response);
+
         }
 
         [HttpPost(ApiRoutes.Authorization.Unassign)]
@@ -84,24 +80,20 @@ namespace AuthServer.Controllers.Version1
                 //     Implement  auto re-login  to update claims info in the jwt
                 //     Or invalidate jwt so user must login again 
                 //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
-            try
-            {
-                var user = await Task.Run(() =>_unitOfWork.UserRepository.GetWithDetails(request.UserID, HttpContext.GetOrganisationID()));
 
-                if (user == null || user.Policy == null ){
-                    return Ok(new UnassignmentResponse{Error = "User does not exist or does not own a permission."});
-                }
+            var user = await Task.Run(() =>_unitOfWork.UserRepository.GetWithDetails(request.UserID, HttpContext.GetOrganisationID()));
 
-                user.Policy = null;
-                await _unitOfWork.CompleteAsync();
-
-                return Ok(new UnassignmentResponse{
-                    Info = "Permission has been removed, please log-in again for the action to take effect."
-                });
+            if (user == null || user.Policy == null ){
+                return Ok(new UnassignmentResponse{Error = "User does not exist or does not own a permission."});
             }
-            catch (Exception e) {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message + e.StackTrace);
-            }   
+
+            user.Policy = null;
+            await _unitOfWork.CompleteAsync();
+
+            return Ok(new UnassignmentResponse{
+                Info = "Permission has been removed, please log-in again for the action to take effect."
+            });
+             
         }
     }
 }

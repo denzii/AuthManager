@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AuthServer.Persistence.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace AuthServer.Persistence.Repositories
@@ -50,9 +51,9 @@ namespace AuthServer.Persistence.Repositories
             return _context.Set<TEntity>().FindAsync(id);
         }
 
-        public void AddAsync(TEntity entity)
+        public ValueTask<EntityEntry<TEntity>> AddAsync(TEntity entity)
         {
-            _entities.AddAsync(entity);
+            return _entities.AddAsync(entity);
         }
         public void Add(TEntity entity)
         {

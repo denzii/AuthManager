@@ -13,9 +13,18 @@ namespace AuthServer.Configurations.AutoMappings
 		public EntityToResponseProfile()
 		{
 			CreateMap<User, Authentication.LoginResponse>();
+
 			CreateMap<Organisation, Organisations.PostResponse>();
+
+			CreateMap<Organisation, Organisations.GetResponse>()
+			.ForMember(mappee => mappee.Policies, option => option.MapFrom(mapper => mapper.Policies.Select(policy => policy.Name)));
+
 			CreateMap<User, Authentication.RegistrationResponse>();
+
 			CreateMap<Policy, Policies.GetAllResponse>();
+
+			CreateMap<Policy, Policies.GetResponse>()
+			.ForMember(mappee => mappee.Users, option => option.MapFrom(mapper => mapper.Users.Select(user => user.Email)));
 		}
 	}
 }

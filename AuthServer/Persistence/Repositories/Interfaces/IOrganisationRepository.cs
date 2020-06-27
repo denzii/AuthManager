@@ -13,5 +13,6 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 		Task<Organisation> GetByNameAsync(string organisationName);
 		
         Task<List<Organisation>> GetAllWithUsers();
+        Task<Organisation> GetByUuid(string organisationID);
     }
 }

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using AuthServer.Models.Entities;
 using AuthServer.Contracts.Version1;
 using AuthServer.Configurations;
+using Serilog;
 
 namespace AuthServer
 {
@@ -20,36 +21,48 @@ namespace AuthServer
 	{
 		public static void Main(string[] args)
 		{
-			var hostBuilder = CreateHostBuilder(args).Build();
+			var config = new ConfigurationBuilder()
+			.AddJsonFile("appsettings.json")
+			.Build();
 			
-			InitializeHostServices(hostBuilder);
+			Log.Logger = new LoggerConfiguration()
+			.ReadFrom.Configuration(config)
+			.CreateLogger();
 
-			hostBuilder.Run();
+			try
+			{
+				Log.Information("Spinning application up {Date}", DateTime.Now);
+				
+				var hostBuilder = CreateHostBuilder(args).Build();
+				InitializeHostServices(hostBuilder);
+				hostBuilder.Run();
+			} 
+			catch(Exception e)
+			{
+				Log.Fatal(e, "Application couldn't be started");
+			} 
+			finally
+			{
+				Log.CloseAndFlush();
+			}
 		}
 
 		public static IHostBuilder CreateHostBuilder(string[] args) =>
 
 			Host.CreateDefaultBuilder(args)
-				.ConfigureWebHostDefaults(webBuilder =>
-				{
+				.UseSerilog()
+				.ConfigureWebHostDefaults(webBuilder => {
 					webBuilder.UseStartup<Startup>();
 				});
 
 		private static void InitializeHostServices(IHost host)
 		{
+			//TODO doesnt work properly
 			using (var scope = host.Services.CreateScope())
 			{
 				var services = scope.ServiceProvider;
-				
-				try
-				{
-					AuthServerContext context = services.GetRequiredService<AuthServerContext>();
-					context.Database.Migrate();			
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e.Message);
-				}
+				AuthServerContext context = services.GetRequiredService<AuthServerContext>();
+				context.Database.Migrate();	
 			}
 		}
 	}

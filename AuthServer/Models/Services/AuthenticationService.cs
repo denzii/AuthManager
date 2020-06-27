@@ -62,12 +62,13 @@ namespace AuthServer.Models.Services
             Policy adminPolicy = null;
 
             if (!organisationHasUsers){
-                adminPolicy = new Policy{Name = AuthorizationPolicies.AdminPolicy, Claim = AuthorizationPolicies.AdminClaim};
+                adminPolicy = organisation.Policies.FirstOrDefault();
             }
-            User newUser = await Task.Run(() =>_unitOfWork.UserRepository.CreateUser(request, organisation, adminPolicy));
 
             using (var transaction = _unitOfWork.UserRepository.BeginTransaction()){
+                User newUser = await Task.Run(() =>_unitOfWork.UserRepository.CreateUser(request, organisation, adminPolicy));
 
+                await _unitOfWork.CompleteAsync();
                 IdentityResult result = await _userManager.CreateAsync(newUser, request.Password);
 
                 if (!result.Succeeded) {
@@ -175,7 +176,7 @@ namespace AuthServer.Models.Services
             await _unitOfWork.CompleteAsync();
 
             string userID = validatedToken.Claims.Single(claim => claim.Type == "ID").Value;
-            User user = await Task.Run(() => _unitOfWork.UserRepository.GetWithDetails(userID, organisationID));
+            User user = await _unitOfWork.UserRepository.GetWithDetails(userID, organisationID);
 
             Dictionary <string, string> tokens = await GetTokens(user);
             tokens.TryGetValue("SecurityToken", out string securityToken);
@@ -250,7 +251,7 @@ namespace AuthServer.Models.Services
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
             RefreshToken refreshToken =  await Task.Run(() => _unitOfWork.RefreshTokenRepository.CreateRefreshToken(token.Id, user.Id));
 
-            _unitOfWork.RefreshTokenRepository.AddAsync(refreshToken);
+            await _unitOfWork.RefreshTokenRepository.AddAsync(refreshToken);
             _unitOfWork.Complete();
 
             tokens.Add("SecurityToken", tokenHandler.WriteToken(token));

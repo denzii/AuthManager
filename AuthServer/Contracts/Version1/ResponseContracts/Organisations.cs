@@ -9,9 +9,16 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
 	{
 		public class PostResponse
 		{
-			public int ID { get; set; }
+			public string ID { get; set; }
 			public string EstablishedOn { get; set; }
 			public string Error { get; set; }
+		}
+
+		public class GetResponse
+		{
+			public string Name { get; set; }
+			public string EstablishedOn { get; set; }
+			public List<string> Policies { get; set; }
 		}
 
 		public class PatchResponse

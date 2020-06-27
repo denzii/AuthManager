@@ -30,7 +30,16 @@ namespace AuthServer.Persistence.Repositories
         {
             return AppContext.Organisations
             .Include(organisation => organisation.Users)
+            .Include(organisation => organisation.Policies)
             .SingleOrDefaultAsync(o => o.Name == organisationName);
+        }
+
+        public Task<Organisation> GetByUuid(string organisationID)
+        {
+            return AppContext.Organisations
+            .Include(organisation => organisation.Policies)
+            .Where(organisation => organisation.ID == organisationID)
+            ?.SingleOrDefaultAsync();
         }
 
         public AuthServerContext AppContext

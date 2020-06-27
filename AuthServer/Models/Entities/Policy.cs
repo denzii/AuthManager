@@ -6,17 +6,15 @@ namespace AuthServer.Models.Entities
 {
     public class Policy
     {
-        [Key]
         public string Name { get; set; }
 
          public string Claim { get; set; }
 
-        [Required]
         [ForeignKey("Organisation")]
         public string OrganisationID { get; set; }
 
         public virtual Organisation Organisation { get; set; }
 
-        public virtual ICollection<User> Users { get; set; }
+        public virtual ICollection<User> Users  { get; set; } = new List<User>();
     }
 }

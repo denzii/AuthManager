@@ -27,9 +27,9 @@ namespace AuthServer.Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
-                    b.HasKey("ID");
+                    b.HasKey("ID", "EstablishedOn");
 
                     b.ToTable("Organisations");
                 });
@@ -39,16 +39,18 @@ namespace AuthServer.Persistence.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
+                    b.Property<string>("OrganisationID")
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+
                     b.Property<string>("Claim")
                         .HasColumnType("longtext CHARACTER SET utf8mb4");
 
-                    b.Property<string>("OrganisationID")
-                        .IsRequired()
+                    b.Property<string>("OrganisationName")
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
-                    b.HasKey("Name");
+                    b.HasKey("Name", "OrganisationID");
 
-                    b.HasIndex("OrganisationID");
+                    b.HasIndex("OrganisationName");
 
                     b.ToTable("Policies");
                 });
@@ -130,6 +132,9 @@ namespace AuthServer.Persistence.Migrations
                         .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
+                    b.Property<DateTime>("OrganisationEstablishedOn")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("OrganisationID")
                         .IsRequired()
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
@@ -144,6 +149,9 @@ namespace AuthServer.Persistence.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("PolicyName")
+                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+
+                    b.Property<string>("PolicyOrganisationID")
                         .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
 
                     b.Property<DateTime>("RegisteredOn")
@@ -173,9 +181,9 @@ namespace AuthServer.Persistence.Migrations
                         .IsUnique()
                         .HasName("UserNameIndex");
 
-                    b.HasIndex("OrganisationID");
+                    b.HasIndex("OrganisationID", "OrganisationEstablishedOn");
 
-                    b.HasIndex("PolicyName");
+                    b.HasIndex("PolicyName", "PolicyOrganisationID");
 
                     b.ToTable("AspNetUsers");
                 });
@@ -316,9 +324,9 @@ namespace AuthServer.Persistence.Migrations
                 {
                     b.HasOne("AuthServer.Models.Entities.Organisation", "Organisation")
                         .WithMany("Policies")
-                        .HasForeignKey("OrganisationID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("OrganisationName")
+                        .HasPrincipalKey("Name")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("AuthServer.Models.Entities.RefreshToken", b =>
@@ -334,13 +342,13 @@ namespace AuthServer.Persistence.Migrations
                 {
                     b.HasOne("AuthServer.Models.Entities.Organisation", "Organisation")
                         .WithMany("Users")
-                        .HasForeignKey("OrganisationID")
+                        .HasForeignKey("OrganisationID", "OrganisationEstablishedOn")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("AuthServer.Models.Entities.Policy", "Policy")
                         .WithMany("Users")
-                        .HasForeignKey("PolicyName")
+                        .HasForeignKey("PolicyName", "PolicyOrganisationID")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

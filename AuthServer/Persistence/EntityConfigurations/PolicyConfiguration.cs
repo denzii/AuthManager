@@ -12,7 +12,8 @@ namespace AuthServer.Persistence.EntityConfigurations
 			
 			modelBuilder
 			.HasOne(policy => policy.Organisation)
-			.WithMany(organisation => organisation.Policies);
+			.WithMany(organisation => organisation.Policies)
+			.HasPrincipalKey(policy => policy.Name);
 
 			modelBuilder
 			.HasMany(policy => policy.Users)
