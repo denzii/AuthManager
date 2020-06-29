@@ -1,5 +1,4 @@
-﻿using AuthServer.Models.DataTransferObjects;
-using AuthServer.Models.Entities;
+﻿using AuthServer.Models.Entities;
 using AuthServer.Persistence.Contexts;
 using AuthServer.Persistence.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -17,30 +16,19 @@ namespace AuthServer.Persistence.Repositories
         {
         }
 
-        public Task<List<UserDTO>> GetAllByOrganisation(string organisationID)
+        public Task<List<User>> GetAllByOrganisation(string organisationID)
         {
             return AppContext.Users
             .Where(user => user.Organisation.ID == organisationID)
-            .Select(user => new UserDTO{
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                PolicyName = user.Policy != null ? user.Policy.Name : null
-            }).ToListAsync();
+            .ToListAsync();
         }
 
-        public Task<UserDTO> GetByOrganisation(string ID, string organisationID)
+        public Task<User> GetByOrganisation(string ID, string organisationID)
         {
             return AppContext.Users
             .Where(user => user.Id == ID && user.Organisation.ID == organisationID)
             ?.Include(user => user.Organisation)
             .Include(user => user.Policy)
-            .Select(user => new UserDTO{
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                PolicyName = user.Policy != null ? user.Policy.Name : null
-            })
             .SingleOrDefaultAsync();
         }
 

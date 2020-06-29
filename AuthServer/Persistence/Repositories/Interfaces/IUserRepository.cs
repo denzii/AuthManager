@@ -1,5 +1,4 @@
-﻿using AuthServer.Models.DataTransferObjects;
-using AuthServer.Models.Entities;
+﻿using AuthServer.Models.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +10,9 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 {
 	public interface IUserRepository : IRepository<User>
 	{
-		Task<List<UserDTO>> GetAllByOrganisation(string organisationID);
+		Task<List<User>> GetAllByOrganisation(string organisationID);
 
-        Task<UserDTO> GetByOrganisation(string ID, string organisationID);
+        Task<User> GetByOrganisation(string ID, string organisationID);
 
 		IEnumerable<User> GetByUserName(string firstName, string lastName, string organisationID);
         

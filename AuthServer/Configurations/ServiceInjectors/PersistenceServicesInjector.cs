@@ -1,4 +1,4 @@
-﻿using AuthServer.Configurations.DataTransferObjects;
+﻿using AuthServer.Models.DTOs;
 using AuthServer.Configurations.ServiceInjectors.Interfaces;
 using AuthServer.Persistence;
 using AuthServer.Persistence.Contexts;

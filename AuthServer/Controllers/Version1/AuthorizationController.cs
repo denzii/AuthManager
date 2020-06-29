@@ -16,10 +16,14 @@ using AuthServer.Models.Entities;
 using System.Security.Claims;
 using AuthServer.Configurations;
 using AuthServer.Configurations.CustomExtensions;
+using System.Net.Mime;
+using static AuthServer.Contracts.Version1.ResponseContracts.Errors;
 
 namespace AuthServer.Controllers.Version1
 {
     [ApiController]
+    [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
     public class AuthorizationController : ControllerBase
@@ -35,7 +39,14 @@ namespace AuthServer.Controllers.Version1
             _mapper = mapper;
         }
 
+        /// <summary>
+        /// Assigns a Claim (Permission/Policy) to the given user.
+        /// </summary>
+        ///<response code="200">Claim has been assigned.</response>
+        ///<response code="400"> User already has the permission or User does not exist, no action has been taken.</response>
         [HttpPost(ApiRoutes.Authorization.Assign)]
+        [ProducesResponseType(typeof(AssignmentResponse), 200)]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> AssignPermission([FromBody] AssignmentRequest request)
         {
                 //TODO Implement many-to-many relationship so user could own more than one permission
@@ -50,8 +61,8 @@ namespace AuthServer.Controllers.Version1
             var policy = await  _unitOfWork.PolicyRepository.GetByOrganisation(request.PolicyName, organisationID);
                 
             if (user == null || policy == null || user.Policy?.Name == policy.Name){
-                return Ok(new AssignmentResponse{
-                    Error = "Permission/User does not exist or already has the permission."
+                return BadRequest(new ErrorResponse{
+                    Message = "Permission/User does not exist or already has the permission."
                     });
             }
                 
@@ -73,7 +84,14 @@ namespace AuthServer.Controllers.Version1
 
         }
 
+        /// <summary>
+        /// Unassigns a Claim (Permission/Policy) from the given user.
+        /// </summary>
+        ///<response code="200"> Policy unassigned successfully.</response>
+        ///<response code="400"> User does not exist or does not own a permission, no action has been taken.</response>
         [HttpPost(ApiRoutes.Authorization.Unassign)]
+        [ProducesResponseType(typeof(UnassignmentResponse), 200)]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> UnassignPermission([FromBody] UnassignmentRequest request)
         {
                 //      TODO 
@@ -84,7 +102,7 @@ namespace AuthServer.Controllers.Version1
             var user = await Task.Run(() =>_unitOfWork.UserRepository.GetWithDetails(request.UserID, HttpContext.GetOrganisationID()));
 
             if (user == null || user.Policy == null ){
-                return Ok(new UnassignmentResponse{Error = "User does not exist or does not own a permission."});
+                return BadRequest(new ErrorResponse{Message = "User does not exist or does not own a permission."});
             }
 
             user.Policy = null;

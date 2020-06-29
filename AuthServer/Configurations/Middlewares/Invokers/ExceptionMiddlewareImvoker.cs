@@ -8,7 +8,7 @@ namespace AuthServer.Configurations.Middlewares.Invokers
     {
         public void InvokeMiddleware(IApplicationBuilder app, IConfiguration configuration)
         {
-            app.UseMiddleware<ExceptionMiddleware>();
+            // app.UseMiddleware<ExceptionMiddleware>();
         }
     }
 }

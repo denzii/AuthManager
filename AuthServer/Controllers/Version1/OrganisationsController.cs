@@ -4,9 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using AuthServer.Models.Entities;
-using AuthServer.Persistence.Contexts;
 using AuthServer.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using AuthServer.Contracts.Version1;
@@ -15,10 +13,15 @@ using static AuthServer.Contracts.Version1.ResponseContracts.Organisations;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using AuthServer.Configurations;
+using System.Net.Mime;
+using AuthServer.Contracts.Version1.ResponseContracts;
+using static AuthServer.Contracts.Version1.ResponseContracts.Errors;
 
 namespace AuthServer.Controllers.Version1
 {
     [ApiController]
+    [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
     public class OrganisationsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -30,37 +33,38 @@ namespace AuthServer.Controllers.Version1
             _mapper = mapper;
         }
 
-        // //// GET: api/v1/Organisations
-        // [HttpGet(ApiRoutes.Organisations.GetAll)]
-        // // [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
-
-        // ////TODO implement internal JWT and roles so only SuperUser could access this endpoint
-        // ////Do not allow person of organisation access all organisation data (This app will be used on many individual projects independent of each other.)
-        // public async Task<ActionResult<IEnumerable<Organisation>>> GetOrganisations()
-        // {        
-        //     return Ok(await _unitOfWork.OrganisationRepository.GetAllWithUsers());
-        // }
-
-        // GET: api/v1/Organisations/{id}
+        /// <summary>
+        /// Retrieves an organisation with the given ID if it exists.
+        /// </summary>
+        ///<response code="200"> Organisation retrieved.</response>
+        ///<response code="400"> Organisation does not exist.</response>
         [HttpGet(ApiRoutes.Organisations.Get)]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
-        public async Task<ActionResult<GetResponse>> GetOrganisation(string ID)
+        [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]       
+        [ProducesResponseType(typeof(GetResponse), 200)]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
+        public async Task<IActionResult> GetOrganisation(string ID)
         {
             Organisation organisation = await _unitOfWork.OrganisationRepository.GetByUuid(ID);
 
             if (organisation == null)
             {
-                return NotFound();
+                return BadRequest(new ErrorResponse{Message = "Policy with the specified ID does not exist"});
             }
 
-            return _mapper.Map<GetResponse>(organisation);
+            return Ok(_mapper.Map<GetResponse>(organisation));
         }
 
 
-        // POST: api/v1/Organisations
-        [HttpPost(ApiRoutes.Organisations.Post)]
-        public async Task<ActionResult<PostResponse>> PostOrganisation(PostRequest request)
+        /// <summary>
+        /// Creates an organisation with the given name.
+        /// </summary>
+        ///<response code="200"> Organisation created.</response>
+        ///<response code="400"> Organisation name already taken.</response>
+       [HttpPost(ApiRoutes.Organisations.Post)]
+        [ProducesResponseType(typeof(PostResponse), 201)]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
+        public async Task<IActionResult> PostOrganisation(PostRequest request)
         {
             //TODO Implement internal JWT to authorize clients and selectively allow hitting this endpoint on
             // Currently publicly accessible.
@@ -69,7 +73,7 @@ namespace AuthServer.Controllers.Version1
 
             if (organisation != null)
             {
-                return BadRequest("An organisation with the specified name already exists");
+                return BadRequest(new ErrorResponse{Message = "An organisation with the specified name already exists"});
             }
 
             //organisationID is guid since a reference to the organisationID is required before the organisation is created

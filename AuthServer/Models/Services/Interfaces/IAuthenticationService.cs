@@ -1,21 +1,28 @@
-﻿using AuthServer.Models.Entities;
+﻿using AuthServer.Contracts.Version1.ResponseContracts;
+using AuthServer.Models.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using static AuthServer.Contracts.Version1.RequestContracts.Authentication;
 using static AuthServer.Contracts.Version1.ResponseContracts.Authentication;
+using static AuthServer.Contracts.Version1.ResponseContracts.Errors;
 
 namespace AuthServer.Models.Services.Interfaces
 {
 	public interface IAuthenticationService
 	{
-		public string GetRegistrationValidationResult(User user, Organisation organisation);
+		Task<LoginResponse> LoginUserAsync(LoginRequest request);
 
-		public Task<RegistrationResponse> RegisterUserAsync(RegistrationRequest request);
+		Task<RefreshTokenResponse> RefreshTokenAsync(ClaimsPrincipal validatedToken, RefreshToken refreshToken, string organisationID);
 
-		public Task<LoginResponse> LoginUserAsync(LoginRequest request);
+        ClaimsPrincipal IsTokenAuthentic(string token);
 
-		public Task<RefreshTokenResponse> RefreshTokenAsync(string token, string refreshToken);
+        Task<RefreshToken> CanTokenBeRefreshed(ClaimsPrincipal validatedToken, string refreshToken);
+
+		Task<List<ErrorResponse>> ValidateRegistrationAsync(RegistrationRequest request, Organisation organisation, User newUser);
+
+		Task<RegistrationResponse> RegisterUserAsync(RegistrationRequest request, Organisation organisation, User newUser);
 	}
 }

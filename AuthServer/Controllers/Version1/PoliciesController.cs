@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
 using AuthServer.Configurations;
 using AuthServer.Configurations.CustomExtensions;
 using AuthServer.Contracts.Version1;
+using AuthServer.Contracts.Version1.ResponseContracts;
 using AuthServer.Models.Entities;
 using AuthServer.Persistence;
 using AutoMapper;
@@ -12,11 +14,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static AuthServer.Contracts.Version1.RequestContracts.Policies;
+using static AuthServer.Contracts.Version1.ResponseContracts.Errors;
 using static AuthServer.Contracts.Version1.ResponseContracts.Policies;
 
 namespace AuthServer.Controllers.Version1
 {
     [ApiController]
+    [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
     public class PoliciesController : ControllerBase
@@ -24,25 +29,29 @@ namespace AuthServer.Controllers.Version1
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-
         public PoliciesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
-        // POST: api/v1/Policies
+        /// <summary>
+        /// Generates a policy with the given name and claim.
+        /// </summary>
+        ///<response code="200"> Policy created.</response>
+        ///<response code="400"> Policy exists within the Organisation.</response>
         [HttpPost(ApiRoutes.Policies.Post)]
-        public async Task<ActionResult<PostResponse>> PostPolicy([FromBody] PostRequest request)
+        [ProducesResponseType(typeof(PostResponse), 201)]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
+        public async Task<IActionResult> PostPolicy([FromBody] PostRequest request)
         {
-
             string organisationID = HttpContext.GetOrganisationID();
             bool policyExists = await Task.Run(() => _unitOfWork.PolicyRepository.PolicyExist(request.Name, HttpContext.GetOrganisationID()));
             Organisation organisation = await _unitOfWork.OrganisationRepository.GetByUuid(organisationID);
 
             if (policyExists)
             {
-                return BadRequest(new PostResponse { Error = "Policy with the specified name already exist within your organisation" });
+                return BadRequest(new ErrorResponse { Message = "Policy with the specified name already exist within your organisation" });
             }
 
             Policy policy = new Policy { Name = request.Name, Claim = request.Claim, OrganisationID = organisationID };
@@ -61,29 +70,39 @@ namespace AuthServer.Controllers.Version1
             return Created(locationUri, response);
         }
 
-        // GET: api/v1/Policies/{Name}
+        /// <summary>
+        /// Retrieves a policy with the given name.
+        /// </summary>
+        ///<response code="200"> Policy retrieved.</response>
+        ///<response code="400"> Policy with the specified name does not exist.</response>
         [HttpGet(ApiRoutes.Policies.Get)]
-        public async Task<ActionResult<GetResponse>> GetPolicy(string name)
+        [ProducesResponseType(typeof(GetResponse), 200)]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
+        public async Task<IActionResult> GetPolicy(string name)
         {
             Policy policy = await Task.Run(() => _unitOfWork.PolicyRepository.GetByOrganisation(name, HttpContext.GetOrganisationID()));
 
             if (policy == null)
             {
-                return NotFound("Policy with the specified ID does not exist");
+                return BadRequest(new ErrorResponse{ Message = "Policy with the specified name does not exist" });
             }
 
-            return _mapper.Map<GetResponse>(policy);
+            return Ok(_mapper.Map<GetResponse>(policy));
         }
 
-        // GET: api/v1/Policies/
+        /// <summary>
+        /// Retrieves all policies.
+        /// </summary>
+        ///<response code="200"> Policies retrieved.</response>
         [HttpGet(ApiRoutes.Policies.GetAll)]
-        public async Task<ActionResult<GetAllResponse>> GetPolicies()
+        [ProducesResponseType(typeof(GetResponse), 200)]
+        public async Task<IActionResult> GetPolicies()
         {
             IEnumerable<Policy> policies = await Task.Run(() => _unitOfWork.PolicyRepository.GetAllByOrganisation(HttpContext.GetOrganisationID()));
 
             if (!policies.Any())
             {
-                return NotFound("No policies exist for your organisation");
+                return Ok();
             }
 
             return Ok(policies.Select(policy => _mapper.Map<GetAllResponse>(policy)));

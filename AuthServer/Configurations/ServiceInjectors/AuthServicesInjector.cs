@@ -1,4 +1,4 @@
-﻿using AuthServer.Configurations.DataTransferObjects;
+﻿using AuthServer.Models.DTOs;
 using AuthServer.Configurations.ServiceInjectors.Interfaces;
 using AuthServer.Contracts.Version1;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -18,7 +18,6 @@ namespace AuthServer.Configurations.ServiceInjectors
             configuration.GetSection(nameof(JWTBearerAuthConfig)).Bind(jwtBearerAuthConfig);
             Console.WriteLine(configuration.GetSection(nameof(JWTBearerAuthConfig)));
             services.AddSingleton(jwtBearerAuthConfig);
-
 
             //JWT Bearer with Azure Active Directory for client app authentication
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -52,7 +51,6 @@ namespace AuthServer.Configurations.ServiceInjectors
         
              services.AddAuthorization(options => {
                  options.AddPolicy(AuthorizationPolicies.AdminPolicy, builder => builder.RequireClaim(AuthorizationPolicies.AdminClaim, "true"));
-                 options.AddPolicy("OrganisationManager", builder => builder.RequireClaim("IsOrganisationManager", "true"));
                  });
         }
 	}

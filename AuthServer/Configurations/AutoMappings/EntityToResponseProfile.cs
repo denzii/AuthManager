@@ -21,6 +21,12 @@ namespace AuthServer.Configurations.AutoMappings
 
 			CreateMap<User, Authentication.RegistrationResponse>();
 
+			CreateMap<User, Users.GetResponse>()
+			.ForMember(mappee => mappee.PolicyName, option => option.MapFrom(mapper => mapper.Policy != null ? mapper.Policy.Name : null));
+
+			CreateMap<User, Users.GetAllResponse>()
+			.ForMember(mappee => mappee.PolicyName, option => option.MapFrom(mapper => mapper.Policy != null ? mapper.Policy.Name : null));
+
 			CreateMap<Policy, Policies.GetAllResponse>();
 
 			CreateMap<Policy, Policies.GetResponse>()

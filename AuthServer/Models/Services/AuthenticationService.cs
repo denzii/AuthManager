@@ -6,7 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AuthServer.Configurations.DataTransferObjects;
+using AuthServer.Models.DTOs;
 using static AuthServer.Contracts.Version1.ResponseContracts.Authentication;
 using AuthServer.Persistence;
 using static AuthServer.Contracts.Version1.RequestContracts.Authentication;
@@ -16,18 +16,19 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using AuthServer.Contracts.Version1;
 using AuthServer.Configurations;
+using static AuthServer.Contracts.Version1.ResponseContracts.Errors;
 
 namespace AuthServer.Models.Services
 {
-	public class AuthenticationService : IAuthenticationService
-	{
+    public class AuthenticationService : IAuthenticationService
+    {
         private readonly IUnitOfWork _unitOfWork;
-		private readonly JWTBearerAuthConfig _jwtConfig;
+        private readonly JWTBearerAuthConfig _jwtConfig;
         private readonly IMapper _mapper;
         private readonly TokenValidationParameters _tokenValidationParameters;
         private readonly UserManager<User> _userManager;
 
-		public AuthenticationService(
+        public AuthenticationService(
             IUnitOfWork unitOfWork,
             JWTBearerAuthConfig jwtConfig,
             IMapper mapper,
@@ -36,51 +37,50 @@ namespace AuthServer.Models.Services
             )
         {
             _unitOfWork = unitOfWork;
-			_jwtConfig = jwtConfig;
+            _jwtConfig = jwtConfig;
             _mapper = mapper;
             _tokenValidationParameters = tokenValidationParameters;
             _userManager = userManager;
         }
 
-        public async Task<RegistrationResponse> RegisterUserAsync(RegistrationRequest request)
-		{   
-            Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.OrganisationName);
+        public async Task<List<ErrorResponse>> ValidateRegistrationAsync(RegistrationRequest request, Organisation organisation, User newUser)
+        {
             User user = await _userManager.FindByEmailAsync(request.Email);
-       
-            string validationError = GetRegistrationValidationResult(user, organisation);  
+            var errorResponses = new List<ErrorResponse>();
 
-            if (validationError != null){
-                return new RegistrationResponse { Errors = new List<string>{validationError} };
+            if (user != null)
+            {
+                errorResponses.Add(new ErrorResponse{Message = "Email is already registered"});
             }
 
-            return await GetRegistrationResponse(request, organisation);
+            if (organisation == null)
+            {
+                errorResponses.Add(new ErrorResponse{Message = "No Organisation found with the given Organisation Name"});
+            }
+
+            if(errorResponses.Any()){
+                return errorResponses;
+            }
+
+            IdentityResult result = await _userManager.CreateAsync(newUser, request.Password);
+
+            return result.Errors.Select(error => new ErrorResponse { Message = error.Description }).ToList();
         }
 
-        private async Task<RegistrationResponse> GetRegistrationResponse(RegistrationRequest request, Organisation organisation)
+        public async Task<RegistrationResponse> RegisterUserAsync(RegistrationRequest request, Organisation organisation, User newUser)
         {
-            var organisationHasUsers = organisation.Users.Any();
-            Policy adminPolicy = null;
+            using (var transaction = _unitOfWork.UserRepository.BeginTransaction())
+            {
+                if (!organisation.Users.Any())
+                {
+                    Policy adminPolicy = organisation.Policies.FirstOrDefault();
+                    newUser.Policy = adminPolicy;
 
-            if (!organisationHasUsers){
-                adminPolicy = organisation.Policies.FirstOrDefault();
-            }
-
-            using (var transaction = _unitOfWork.UserRepository.BeginTransaction()){
-                User newUser = await Task.Run(() =>_unitOfWork.UserRepository.CreateUser(request, organisation, adminPolicy));
+                    await _userManager.AddClaimAsync(newUser, new Claim(adminPolicy.Claim, "true"));
+                }
 
                 await _unitOfWork.CompleteAsync();
-                IdentityResult result = await _userManager.CreateAsync(newUser, request.Password);
-
-                if (!result.Succeeded) {
-                    return new RegistrationResponse { Errors = result.Errors.Select( error => error.Description) };
-                }
-
-                if (!organisationHasUsers){
-                    await _userManager.AddClaimAsync(newUser, new Claim(AuthorizationPolicies.AdminClaim, "true"));
-                }
-                
-                _unitOfWork.Complete();
-                Dictionary<string, string> tokens  = await GetTokens(newUser);
+                Dictionary<string, string> tokens = await GetTokens(newUser);
 
                 RegistrationResponse response = _mapper.Map<RegistrationResponse>(newUser);
 
@@ -96,30 +96,8 @@ namespace AuthServer.Models.Services
             }
         }
 
-        public string GetRegistrationValidationResult(User user, Organisation organisation)
-        {
-            string error = null;
-
-            if (user != null)
-            {
-                error = "Email is already registered";
-            }
-
-            if (organisation == null)
-            {
-                error = "No Organisation found with the given Organisation Name";
-            }
-
-            return error;
-        }
-
         public async Task<LoginResponse> LoginUserAsync(LoginRequest request)
         {
-            if (!await _unitOfWork.UserRepository.UserWithEmailExistsAsync(request.Email))
-            {
-                return new LoginResponse { Error = "User with the given email address could not be found." };
-            }
-
             User existingUser = await Task.Run(() => _unitOfWork.UserRepository.GetByEmail(request.Email));
 
             Dictionary<string, string> tokens = tokens = await GetTokens(existingUser);
@@ -134,15 +112,13 @@ namespace AuthServer.Models.Services
             return response;
         }
 
-        public async Task<RefreshTokenResponse> RefreshTokenAsync(string token, string refreshToken)
+        public ClaimsPrincipal IsTokenAuthentic(string token)
         {
-            ClaimsPrincipal validatedToken = GetClaimsPrincipalFromToken(token);
+            return GetClaimsPrincipalFromToken(token);
+        }
 
-            if(validatedToken == null)
-            {
-                return new RefreshTokenResponse { Error = "Invalid Token error." };
-            }
-
+        public async Task<RefreshToken> CanTokenBeRefreshed(ClaimsPrincipal validatedToken, string refreshToken)
+        {
             var expiryDateUnix = long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
 
             //if not expired, dont let user refresh
@@ -154,7 +130,6 @@ namespace AuthServer.Models.Services
 
             string jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
 
-            string organisationID = validatedToken.Claims.Single(x => x.Type == "OrganisationID").Value;
 
             RefreshToken storedRefreshToken = await _unitOfWork.RefreshTokenRepository.GetRefreshToken(refreshToken);
 
@@ -165,9 +140,14 @@ namespace AuthServer.Models.Services
                 || storedRefreshToken.Used
                 || storedRefreshToken.JwtID != jti)
             {
-                return new RefreshTokenResponse { Error = "Invalid Token." };
+                return null;
             }
 
+            return storedRefreshToken;
+        }
+
+        public async Task<RefreshTokenResponse> RefreshTokenAsync(ClaimsPrincipal validatedToken, RefreshToken storedRefreshToken, string organisationID)
+        {
 
             var transaction = _unitOfWork.RefreshTokenRepository.BeginTransaction();
 
@@ -178,20 +158,21 @@ namespace AuthServer.Models.Services
             string userID = validatedToken.Claims.Single(claim => claim.Type == "ID").Value;
             User user = await _unitOfWork.UserRepository.GetWithDetails(userID, organisationID);
 
-            Dictionary <string, string> tokens = await GetTokens(user);
+            Dictionary<string, string> tokens = await GetTokens(user);
             tokens.TryGetValue("SecurityToken", out string securityToken);
             tokens.TryGetValue("RefreshToken", out string newRefreshToken);
 
             transaction.Commit();
 
-            return new RefreshTokenResponse {
+            return new RefreshTokenResponse
+            {
                 Email = user.Email,
                 Token = securityToken,
                 RefreshToken = newRefreshToken,
             };
         }
 
-        private ClaimsPrincipal GetClaimsPrincipalFromToken(string token)
+        public ClaimsPrincipal GetClaimsPrincipalFromToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
@@ -224,7 +205,7 @@ namespace AuthServer.Models.Services
             var tokens = new Dictionary<string, string>();
             var tokenHandler = new JwtSecurityTokenHandler();
             byte[] key = Encoding.ASCII.GetBytes(_jwtConfig.Secret); //key = secret in ascii bytes
-            
+
             var claims = new List<Claim>
                 {
                     new Claim(JwtRegisteredClaimNames.Sub, user.Email),
@@ -235,8 +216,9 @@ namespace AuthServer.Models.Services
 
             var userClaims = await _userManager.GetClaimsAsync(user);
             claims.AddRange(userClaims);
-            
-            var tokenDescriptor = new SecurityTokenDescriptor(){
+
+            var tokenDescriptor = new SecurityTokenDescriptor()
+            {
                 // SecurityTokenDescriptor takes in an array of Claims wrapped in Claims Identity in its Subject field
                 // This is how we specify exactly what the token must include, each rule is defined as a new Claim
                 // Each Claim is matched against a registered Claim Name or custom "string".
@@ -249,7 +231,7 @@ namespace AuthServer.Models.Services
             };
 
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-            RefreshToken refreshToken =  await Task.Run(() => _unitOfWork.RefreshTokenRepository.CreateRefreshToken(token.Id, user.Id));
+            RefreshToken refreshToken = await Task.Run(() => _unitOfWork.RefreshTokenRepository.CreateRefreshToken(token.Id, user.Id));
 
             await _unitOfWork.RefreshTokenRepository.AddAsync(refreshToken);
             _unitOfWork.Complete();

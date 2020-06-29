@@ -1,4 +1,3 @@
-using AuthServer.Models.DataTransferObjects;
 using AuthServer.Models.Entities;
 using AuthServer.Persistence.Contexts;
 using AuthServer.Persistence.Repositories.Interfaces;

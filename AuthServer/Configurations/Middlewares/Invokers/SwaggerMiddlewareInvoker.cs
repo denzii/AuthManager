@@ -1,4 +1,4 @@
-﻿using AuthServer.Configurations.DataTransferObjects;
+﻿using AuthServer.Models.DTOs;
 using AuthServer.Configurations.Middlewares.Invokers.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
