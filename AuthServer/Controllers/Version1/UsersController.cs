@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Net.Mime;
 using static AuthServer.Contracts.Version1.ResponseContracts.Users;
 using AutoMapper;
+using AuthServer.Contracts.Version1.ResponseContracts;
 
 namespace AuthServer.Controllers.Version1
 {
@@ -38,13 +39,15 @@ namespace AuthServer.Controllers.Version1
         /// </summary>
         ///<response code="200"> Users retrieved.</response>
         [HttpGet(ApiRoutes.Users.GetAll)]
-        [ProducesResponseType(typeof(GetAllResponse), 200)]
+        [ProducesResponseType(typeof(PagedResponse<GetResponse>), 200)]
         public async Task<IActionResult> GetUsers()
         {
             //TODO Add Pagination
             var users = await _unitOfWork.UserRepository.GetAllByOrganisation(HttpContext.GetOrganisationID());
 
-            return Ok(users.Select(user => _mapper.Map<GetAllResponse>(user)));
+            IEnumerable<GetResponse> getResponses = users.Select(user => _mapper.Map<GetResponse>(user));
+
+            return Ok(new PagedResponse<GetResponse>(getResponses));
         }
 
         /// <summary>
@@ -53,7 +56,7 @@ namespace AuthServer.Controllers.Version1
         ///<response code="200"> User retrieved.</response>
         ///<response code="400"> User does not exists within the Organisation.</response>
         [HttpGet(ApiRoutes.Users.Get)]
-        [ProducesResponseType(typeof(GetResponse), 200)]
+        [ProducesResponseType(typeof(Response<GetResponse>), 200)]
         public async Task<IActionResult> GetUser(string ID)
         {
             User user = await _unitOfWork.UserRepository.GetByOrganisation(ID, HttpContext.GetOrganisationID());
@@ -63,7 +66,9 @@ namespace AuthServer.Controllers.Version1
                 return NotFound();
             }
             
-            return Ok(_mapper.Map<GetResponse>(user));
+            var getResponse = _mapper.Map<GetResponse>(user);
+
+            return Ok(new Response<GetResponse>(getResponse));
         }
     }
 }

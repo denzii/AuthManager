@@ -13,11 +13,11 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public string PolicyName { get; set; }
             public string Info { get; set; }
         }
-        public class AssignmentResponseExample: IExamplesProvider<AssignmentResponse>
+        public class AssignmentResponseExample: IExamplesProvider<Response<AssignmentResponse>>
         {
-            public AssignmentResponse GetExamples()
+            public Response<AssignmentResponse> GetExamples()
             {
-                return new AssignmentResponse
+                var responseExample =  new AssignmentResponse
                 {
                     Token = DataFixtures.Token,
                     RefreshToken = DataFixtures.RefreshToken,
@@ -25,6 +25,8 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
                     PolicyName = DataFixtures.PolicyName1,
                     Info = DataFixtures.PolicyGenericInfo
                 };
+
+                return new Response<AssignmentResponse>(responseExample);
             }
         }
 
@@ -36,11 +38,11 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public string PolicyName { get; set; }
             public string Info { get; set; }
         }
-        public class UnassignmentResponseExample : IExamplesProvider<UnassignmentResponse>
+        public class UnassignmentResponseExample : IExamplesProvider<Response<UnassignmentResponse>>
         {
-            public UnassignmentResponse GetExamples()
+            public Response<UnassignmentResponse> GetExamples()
             {
-                return new UnassignmentResponse
+                var responseExample = new UnassignmentResponse
                 {
                     Token = DataFixtures.Token,
                     RefreshToken = DataFixtures.RefreshToken,
@@ -48,6 +50,8 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
                     PolicyName = DataFixtures.PolicyName2,
                     Info = DataFixtures.PolicyGenericInfo
                 };
+
+                return new Response<UnassignmentResponse>(responseExample);
             }
         }
     }

@@ -12,15 +12,17 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public string Claim { get; set; }
         }
 
-        public class PostResponseExample : IExamplesProvider<PostResponse>
+        public class PostResponseExample : IExamplesProvider<Response<PostResponse>>
         {
-            public PostResponse GetExamples()
+            public Response<PostResponse> GetExamples()
             {
-                return new PostResponse
+                var responseExample = new PostResponse
                 {
                     Name = DataFixtures.PolicyName1,
                     Claim = DataFixtures.PolicyClaim1
                 };
+
+                return new Response<PostResponse>(responseExample);
             }
         }
 
@@ -33,11 +35,11 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public List<string> Users { get; set; }
         }
 
-        public class GetResponseExample : IExamplesProvider<GetResponse>
+        public class GetResponseExample : IExamplesProvider<Response<GetResponse>>
         {
-            public GetResponse GetExamples()
+            public Response<GetResponse> GetExamples()
             {
-                return new GetResponse
+                var responseExample = new GetResponse
                 {
                     Name = DataFixtures.PolicyName2,
                     Claim = DataFixtures.PolicyClaim2,
@@ -46,26 +48,40 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
                         DataFixtures.Email3
                         }
                 };
+
+                return new Response<GetResponse>(responseExample);
             }
         }
 
-        public class GetAllResponse
+        public class PagedGetResponseExample : IExamplesProvider<PagedResponse<GetResponse>>
         {
-            public string Name { get; set; }
-
-            public string Claim { get; set; }
-        }
-        public class GetAllResponseExample : IExamplesProvider<GetAllResponse>
-        {
-            public GetAllResponse GetExamples()
+            public PagedResponse<GetResponse> GetExamples()
             {
-                return new GetAllResponse
-                {
+                var responseExamples = new List<GetResponse>{
+                    new GetResponse {
+                    Name = DataFixtures.PolicyName2,
+                    Claim = DataFixtures.PolicyClaim2,
+                    Users = new List<string>{
+                        DataFixtures.Email2,
+                        DataFixtures.Email3
+                        }
+                },
+                    new GetResponse {
                     Name = DataFixtures.PolicyName3,
-                    Claim = DataFixtures.PolicyClaim2
+                    Claim = DataFixtures.PolicyClaim3,
+                    Users = new List<string>{
+                        DataFixtures.Email1,
+                        }
+                }
+            };
+
+                return new PagedResponse<GetResponse>(responseExamples){
+                    PageNumber = 2,
+                    PageSize = 10,
+                    NextPage = "URI",
+                    PreviousPage = "URI"
                 };
             }
         }
-
     }
 }

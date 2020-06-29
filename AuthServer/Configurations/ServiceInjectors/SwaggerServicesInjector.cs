@@ -33,12 +33,29 @@ namespace AuthServer.Configurations.ServiceInjectors
 					Type = SecuritySchemeType.ApiKey
 				});
 
+				options.AddSecurityDefinition(name: "ApiKey", new OpenApiSecurityScheme()
+				{
+					Description = "Api Key Authorization header",
+					Name = "ApiKey",
+					In = ParameterLocation.Header,
+					Type = SecuritySchemeType.ApiKey
+				});
+
        			options.CustomSchemaIds(x => x.FullName);
 				   
 				options.AddSecurityRequirement(new OpenApiSecurityRequirement{
 					{ new OpenApiSecurityScheme{ Reference = new OpenApiReference
 					{
 						Id = "Bearer",
+						Type = ReferenceType.SecurityScheme
+
+					}}, new List<string>()}	
+				});
+
+				options.AddSecurityRequirement(new OpenApiSecurityRequirement{
+					{ new OpenApiSecurityScheme{ Reference = new OpenApiReference
+					{
+						Id = "ApiKey",
 						Type = ReferenceType.SecurityScheme
 
 					}}, new List<string>()}	

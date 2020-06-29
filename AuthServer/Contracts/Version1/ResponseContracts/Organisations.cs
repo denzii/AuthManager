@@ -13,15 +13,17 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public string ID { get; set; }
             public DateTime EstablishedOn { get; set; }
         }
-        public class PostResponseExample : IExamplesProvider<PostResponse>
+        public class PostResponseExample : IExamplesProvider<Response<PostResponse>>
         {
-            public PostResponse GetExamples()
+            public Response<PostResponse> GetExamples()
             {
-                return new PostResponse
+                var responseExample = new PostResponse
                 {
                     ID = DataFixtures.GUID,
                     EstablishedOn = DataFixtures.Now
                 };
+
+                return new Response<PostResponse>(responseExample);
             }
         }
 
@@ -31,11 +33,11 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public DateTime EstablishedOn { get; set; }
             public List<string> Policies { get; set; }
         }
-        public class GetResponseExample : IExamplesProvider<GetResponse>
+        public class GetResponseExample : IExamplesProvider<Response<GetResponse>>
         {
-            public GetResponse GetExamples()
+            public Response<GetResponse> GetExamples()
             {
-                return new GetResponse
+                var responseExample = new GetResponse
                 {
                     Name = DataFixtures.Organisation,
                     EstablishedOn = DataFixtures.Now,
@@ -45,6 +47,8 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
                         DataFixtures.PolicyName3
                         }
                 };
+
+                return new Response<GetResponse>(responseExample);
             }
         }
     }

@@ -16,10 +16,12 @@ using AuthServer.Configurations;
 using System.Net.Mime;
 using AuthServer.Contracts.Version1.ResponseContracts;
 using static AuthServer.Contracts.Version1.ResponseContracts.Errors;
+using AuthServer.Configurations.Middlewares;
 
 namespace AuthServer.Controllers.Version1
 {
     [ApiController]
+    [ApiKeyAuth]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
     public class OrganisationsController : ControllerBase
@@ -41,7 +43,7 @@ namespace AuthServer.Controllers.Version1
         [HttpGet(ApiRoutes.Organisations.Get)]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]       
-        [ProducesResponseType(typeof(GetResponse), 200)]
+        [ProducesResponseType(typeof(Response<GetResponse>), 200)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> GetOrganisation(string ID)
         {
@@ -52,7 +54,10 @@ namespace AuthServer.Controllers.Version1
                 return BadRequest(new ErrorResponse{Message = "Policy with the specified ID does not exist"});
             }
 
-            return Ok(_mapper.Map<GetResponse>(organisation));
+            GetResponse getResponse = _mapper.Map<GetResponse>(organisation);
+            var response = new Response<GetResponse>(getResponse);
+
+            return Ok(response);
         }
 
 
@@ -62,7 +67,7 @@ namespace AuthServer.Controllers.Version1
         ///<response code="200"> Organisation created.</response>
         ///<response code="400"> Organisation name already taken.</response>
        [HttpPost(ApiRoutes.Organisations.Post)]
-        [ProducesResponseType(typeof(PostResponse), 201)]
+        [ProducesResponseType(typeof(Response<PostResponse>), 201)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> PostOrganisation(PostRequest request)
         {
@@ -96,12 +101,12 @@ namespace AuthServer.Controllers.Version1
             await _unitOfWork.PolicyRepository.AddAsync(policy);
             await _unitOfWork.CompleteAsync();
 
-            PostResponse response = _mapper.Map<PostResponse>(organisation);
+            PostResponse postResponse = _mapper.Map<PostResponse>(organisation);
 
             string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-            string locationUri = baseUrl + "/" + ApiRoutes.Organisations.Get.Replace("{ID}", response.ID.ToString());
+            string locationUri = baseUrl + "/" + ApiRoutes.Organisations.Get.Replace("{ID}", postResponse.ID.ToString());
 
-            return Created(locationUri, response);
+            return Created(locationUri, new Response<PostResponse>(postResponse));
 
         }
     }

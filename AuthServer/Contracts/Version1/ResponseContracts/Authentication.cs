@@ -15,16 +15,18 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public string RefreshToken { get; set; }
             public string Email { get; set; }
         }
-        public class LoginResponseExample : IExamplesProvider<LoginResponse>
+        public class LoginResponseExample : IExamplesProvider<Response<LoginResponse>>
         {
-            public LoginResponse GetExamples()
+            public Response<LoginResponse> GetExamples()
             {
-                return new LoginResponse
+                var responseExample = new LoginResponse
                 {
                     Token = DataFixtures.Token,
                     RefreshToken = DataFixtures.RefreshToken,
                     Email = DataFixtures.Email3
                 };
+
+                return new Response<LoginResponse>(responseExample);
             }
         }
 
@@ -36,11 +38,11 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public string Email { get; set; }
             public DateTime RegisteredOn { get; set; }
         }
-        public class RegistrationResponseExample : IExamplesProvider<RegistrationResponse>
+        public class RegistrationResponseExample : IExamplesProvider<Response<RegistrationResponse>>
         {
-            public RegistrationResponse GetExamples()
+            public Response<RegistrationResponse> GetExamples()
             {
-                return new RegistrationResponse
+                var responseExample = new RegistrationResponse
                 {
                     Token = DataFixtures.Token,
                     RefreshToken = DataFixtures.RefreshToken,
@@ -48,6 +50,8 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
                     Email = DataFixtures.Email2,
                     RegisteredOn = DataFixtures.Now
                 };
+
+                return new Response<RegistrationResponse>(responseExample);
             }
         }
 
@@ -57,16 +61,18 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public string RefreshToken { get; set; }
             public string Email { get; set; }
         }
-		public class RefreshTokenResponseExample: IExamplesProvider<RefreshTokenResponse>
+		public class RefreshTokenResponseExample: IExamplesProvider<Response<RefreshTokenResponse>>
         {
-            public RefreshTokenResponse GetExamples()
+            public Response<RefreshTokenResponse> GetExamples()
             {
-                return new RefreshTokenResponse
+                var responseExample = new RefreshTokenResponse
                 {
                     Token = DataFixtures.Token,
                     RefreshToken = DataFixtures.RefreshToken,
                     Email = DataFixtures.Email3
                 };
+
+                return new Response<RefreshTokenResponse>(responseExample);
             }
 		}
     }

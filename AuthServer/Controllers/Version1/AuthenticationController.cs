@@ -15,6 +15,7 @@ using System.Security.Claims;
 using AuthServer.Models.Entities;
 using System.Collections;
 using System.Collections.Generic;
+using AuthServer.Contracts.Version1.ResponseContracts;
 
 namespace AuthServer.Controllers.Version1
 {
@@ -39,7 +40,7 @@ namespace AuthServer.Controllers.Version1
         ///<response code="201"> Creates a user</response>
         ///<response code="400"> Failed due to an error and user was not created.</response>        
         [HttpPost(ApiRoutes.Authentication.Register)]
-        [ProducesResponseType(typeof(RegistrationResponse), 201)]
+        [ProducesResponseType(typeof(Response<RegistrationResponse>), 201)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> Register([FromBody] RegistrationRequest request)
         {
@@ -52,12 +53,12 @@ namespace AuthServer.Controllers.Version1
                 return BadRequest(errorResponses);
             }
 
-            RegistrationResponse response = await _authService.RegisterUserAsync(request, organisation, newUser);
+            RegistrationResponse registrationResponse = await _authService.RegisterUserAsync(request, organisation, newUser);
                 
             string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-            string locationUri = baseUrl + "/" + ApiRoutes.Users.Get.Replace("{ID}", response.Id.ToString());
+            string locationUri = baseUrl + "/" + ApiRoutes.Users.Get.Replace("{ID}", registrationResponse.Id.ToString());
 
-            return Created(locationUri, response);
+            return Created(locationUri, new Response<RegistrationResponse>(registrationResponse));
         }
 
         /// <summary>
@@ -67,7 +68,7 @@ namespace AuthServer.Controllers.Version1
         ///<response code="200"> Provides a JWT and Refresh Token.</response>
         ///<response code="400"> Incorrect data, failed to authenticate.</response>
         [HttpPost(ApiRoutes.Authentication.Login)]
-        [ProducesResponseType(typeof(LoginResponse), 200)]
+        [ProducesResponseType(typeof(Response<LoginResponse>), 200)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -76,9 +77,9 @@ namespace AuthServer.Controllers.Version1
                 return BadRequest( new ErrorResponse { Message = "User with the given email address could not be found." });
             }
 
-            LoginResponse response = await Task.Run(() => _authService.LoginUserAsync(request));
+            LoginResponse loginResponse = await Task.Run(() => _authService.LoginUserAsync(request));
 
-            return Ok(response);
+            return Ok(new Response<LoginResponse>(loginResponse));
         }
 
         /// <summary>
@@ -87,7 +88,7 @@ namespace AuthServer.Controllers.Version1
         ///<response code="200"> Provides a JWT and Refresh Token.</response>
         ///<response code="400"> Tokens are invalid or not suitable for refresh, session cannot be prolonged.</response>
         [HttpPost(ApiRoutes.Authentication.Refresh)]
-        [ProducesResponseType(typeof(RefreshTokenResponse), 200)]
+        [ProducesResponseType(typeof(Response<RefreshTokenResponse>), 200)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
@@ -106,9 +107,9 @@ namespace AuthServer.Controllers.Version1
             
             string organisationID = validatedToken.Claims.Single(x => x.Type == "OrganisationID").Value;
 
-            RefreshTokenResponse response = await _authService.RefreshTokenAsync(validatedToken, refreshToken, organisationID);
+            RefreshTokenResponse refreshTokenResponse = await _authService.RefreshTokenAsync(validatedToken, refreshToken, organisationID);
 
-            return Ok(response);
+            return Ok(new Response<RefreshTokenResponse>(refreshTokenResponse));
         }
     }
 }

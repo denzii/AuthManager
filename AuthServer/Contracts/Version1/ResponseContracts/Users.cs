@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 
 namespace AuthServer.Contracts.Version1.ResponseContracts
@@ -14,38 +15,46 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             public string PolicyName { get; set; }
         }
 
-        public class GetResponseExample : IExamplesProvider<GetResponse>
+        public class GetResponseExample : IExamplesProvider<Response<GetResponse>>
         {
-            public GetResponse GetExamples()
+            public Response<GetResponse> GetExamples()
             {
-                return new GetResponse
+                var responseExample = new GetResponse
                 {
                     Email = DataFixtures.Email1,
                     FirstName = DataFixtures.Firstname1,
                     LastName = DataFixtures.Lastname,
                     PolicyName = DataFixtures.PolicyName2
                 };
+
+                return new Response<GetResponse>(responseExample);
             }
         }
 
-        public class GetAllResponse
+        public class PagedGetResponseExample : IExamplesProvider<PagedResponse<GetResponse>>
         {
-            public string Email { get; set; }
-            public string FirstName { get; set; }
-            public string LastName { get; set; }
-            public string PolicyName { get; set; }
-        }
-
-        public class GetAllResponseExample : IExamplesProvider<GetAllResponse>
-        {
-            public GetAllResponse GetExamples()
+            public PagedResponse<GetResponse> GetExamples()
             {
-                return new GetAllResponse
-                {
+                var responseExamples = new List<GetResponse>{
+                    new GetResponse {
                     Email = DataFixtures.Email1,
                     FirstName = DataFixtures.Firstname1,
                     LastName = DataFixtures.Lastname,
                     PolicyName = DataFixtures.PolicyName2
+                },
+                    new GetResponse {
+                    Email = DataFixtures.Email3,
+                    FirstName = DataFixtures.Firstname3,
+                    LastName = DataFixtures.Lastname,
+                    PolicyName = DataFixtures.PolicyName3
+                }
+            };
+
+                return new PagedResponse<GetResponse>(responseExamples) {
+                    PageNumber = 2,
+                    PageSize = 10,
+                    NextPage = "URI",
+                    PreviousPage = "URI"
                 };
             }
         }
