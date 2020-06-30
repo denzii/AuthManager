@@ -16,14 +16,14 @@ namespace AuthServer.Configurations.ServiceInjectors
 		{
 			MapperConfiguration config = new AutoMapper.MapperConfiguration(config =>
 			{
-				config.AddProfile(new EntityToResponseProfile());
-				config.AddProfile(new RequestToEntityProfile());
+				config.AddProfile(new ModelToResponseProfile());
+				config.AddProfile(new RequestToModelProfile());
 			});
 			IMapper mapper = config.CreateMapper();
 
 			services.AddSingleton(mapper);
-			services.AddTransient<EntityToResponseProfile>();
-			services.AddTransient<RequestToEntityProfile>();
+			services.AddTransient<ModelToResponseProfile>();
+			services.AddTransient<RequestToModelProfile>();
 		}
 	}
 }

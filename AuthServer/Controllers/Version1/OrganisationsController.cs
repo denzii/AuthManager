@@ -17,6 +17,7 @@ using System.Net.Mime;
 using AuthServer.Contracts.Version1.ResponseContracts;
 using static AuthServer.Contracts.Version1.ResponseContracts.Errors;
 using AuthServer.Configurations.Middlewares;
+using AuthServer.Models.Services.Interfaces;
 
 namespace AuthServer.Controllers.Version1
 {
@@ -28,13 +29,15 @@ namespace AuthServer.Controllers.Version1
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IURIService _URIService;
 
-        public OrganisationsController(IUnitOfWork unitOfWork, IMapper mapper)
+        public OrganisationsController(IUnitOfWork unitOfWork, IMapper mapper, IURIService URIService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _URIService = URIService;
         }
-
+        
         /// <summary>
         /// Retrieves an organisation with the given ID if it exists.
         /// </summary>
@@ -103,11 +106,9 @@ namespace AuthServer.Controllers.Version1
 
             PostResponse postResponse = _mapper.Map<PostResponse>(organisation);
 
-            string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-            string locationUri = baseUrl + "/" + ApiRoutes.Organisations.Get.Replace("{ID}", postResponse.ID.ToString());
+            var locationURI = _URIService.GetOrganisationURI(postResponse.ID);
 
-            return Created(locationUri, new Response<PostResponse>(postResponse));
-
+            return Created(locationURI, new Response<PostResponse>(postResponse));
         }
     }
 }

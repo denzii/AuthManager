@@ -27,10 +27,13 @@ namespace AuthServer.Controllers.Version1
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuthenticationService _authService;
 
-        public AuthenticationController(IUnitOfWork unitOfWork, IAuthenticationService authService)
+        private readonly IURIService _URIService;
+
+        public AuthenticationController(IUnitOfWork unitOfWork, IAuthenticationService authService, IURIService URIService)
         {
             _unitOfWork = unitOfWork;
             _authService = authService;
+            _URIService = URIService;
         }
 
         /// <summary>
@@ -54,11 +57,9 @@ namespace AuthServer.Controllers.Version1
             }
 
             RegistrationResponse registrationResponse = await _authService.RegisterUserAsync(request, organisation, newUser);
-                
-            string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-            string locationUri = baseUrl + "/" + ApiRoutes.Users.Get.Replace("{ID}", registrationResponse.Id.ToString());
+            var locationURI = _URIService.GetUserURI(registrationResponse.ID);
 
-            return Created(locationUri, new Response<RegistrationResponse>(registrationResponse));
+            return Created(locationURI, new Response<RegistrationResponse>(registrationResponse));
         }
 
         /// <summary>
@@ -77,7 +78,7 @@ namespace AuthServer.Controllers.Version1
                 return BadRequest( new ErrorResponse { Message = "User with the given email address could not be found." });
             }
 
-            LoginResponse loginResponse = await Task.Run(() => _authService.LoginUserAsync(request));
+            LoginResponse loginResponse = await _authService.LoginUserAsync(request);
 
             return Ok(new Response<LoginResponse>(loginResponse));
         }

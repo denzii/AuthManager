@@ -58,8 +58,8 @@ namespace AuthServer.Controllers.Version1
                 //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
 
             var organisationID = HttpContext.GetOrganisationID();
-            var user = await _unitOfWork.UserRepository.GetWithDetails(request.UserID, organisationID);
-            var policy = await  _unitOfWork.PolicyRepository.GetByOrganisation(request.PolicyName, organisationID);
+            var user = await _unitOfWork.UserRepository.GetWithDetailsAsync(request.UserID, organisationID);
+            var policy = await  _unitOfWork.PolicyRepository.GetByOrganisationAsync(request.PolicyName, organisationID);
                 
             if (user == null || policy == null || user.Policy?.Name == policy.Name){
                 return BadRequest(new ErrorResponse{
@@ -101,7 +101,7 @@ namespace AuthServer.Controllers.Version1
                 //     Or invalidate jwt so user must login again 
                 //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
 
-            var user = await Task.Run(() =>_unitOfWork.UserRepository.GetWithDetails(request.UserID, HttpContext.GetOrganisationID()));
+            var user = await _unitOfWork.UserRepository.GetWithDetailsAsync(request.UserID, HttpContext.GetOrganisationID());
 
             if (user == null || user.Policy == null ){
                 return BadRequest(new ErrorResponse{Message = "User does not exist or does not own a permission."});

@@ -8,9 +8,9 @@ using AuthServer.Contracts.Version1.ResponseContracts;
 
 namespace AuthServer.Configurations.AutoMappings
 {
-	public class EntityToResponseProfile : Profile
+	public class ModelToResponseProfile : Profile
 	{
-		public EntityToResponseProfile()
+		public ModelToResponseProfile()
 		{
 			CreateMap<User, Authentication.LoginResponse>();
 
@@ -19,7 +19,8 @@ namespace AuthServer.Configurations.AutoMappings
 			CreateMap<Organisation, Organisations.GetResponse>()
 			.ForMember(mappee => mappee.Policies, option => option.MapFrom(mapper => mapper.Policies.Select(policy => policy.Name)));
 
-			CreateMap<User, Authentication.RegistrationResponse>();
+			CreateMap<User, Authentication.RegistrationResponse>()
+			.ForMember(mappee => mappee.ID, option => option.MapFrom(mapper => mapper.Id));
 
 			CreateMap<User, Users.GetResponse>()
 			.ForMember(mappee => mappee.PolicyName, option => option.MapFrom(mapper => mapper.Policy != null ? mapper.Policy.Name : null));

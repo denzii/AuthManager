@@ -6,8 +6,12 @@ using System.Threading.Tasks;
 using AuthServer.Configurations;
 using AuthServer.Configurations.CustomExtensions;
 using AuthServer.Contracts.Version1;
+using AuthServer.Contracts.Version1.RequestContracts.Queries;
 using AuthServer.Contracts.Version1.ResponseContracts;
+using AuthServer.Models.DTOs;
 using AuthServer.Models.Entities;
+using AuthServer.Models.Helpers;
+using AuthServer.Models.Services.Interfaces;
 using AuthServer.Persistence;
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -28,13 +32,15 @@ namespace AuthServer.Controllers.Version1
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IURIService _URIService;
 
-        public PoliciesController(IUnitOfWork unitOfWork, IMapper mapper)
+        public PoliciesController(IUnitOfWork unitOfWork, IMapper mapper, IURIService URIService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _URIService = URIService;
         }
-
+        
         /// <summary>
         /// Generates a policy with the given name and claim.
         /// </summary>
@@ -46,7 +52,7 @@ namespace AuthServer.Controllers.Version1
         public async Task<IActionResult> PostPolicy([FromBody] PostRequest request)
         {
             string organisationID = HttpContext.GetOrganisationID();
-            bool policyExists = await Task.Run(() => _unitOfWork.PolicyRepository.PolicyExist(request.Name, HttpContext.GetOrganisationID()));
+            bool policyExists = await _unitOfWork.PolicyRepository.PolicyExistAsync(request.Name, HttpContext.GetOrganisationID());
             Organisation organisation = await _unitOfWork.OrganisationRepository.GetByUuid(organisationID);
 
             if (policyExists)
@@ -63,11 +69,9 @@ namespace AuthServer.Controllers.Version1
             await _unitOfWork.CompleteAsync();
 
             var postResponse = new PostResponse { Name = policy.Name, Claim = policy.Claim };
+            var locationURI = _URIService.GetPolicyURI(postResponse.Name);
 
-            string baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-            string locationUri = baseUrl + "/" + ApiRoutes.Policies.Get.Replace("{Name}", postResponse.Name);
-
-            return Created(locationUri, new Response<PostResponse>(postResponse));
+            return Created(locationURI, new Response<PostResponse>(postResponse));
         }
 
         /// <summary>
@@ -80,7 +84,7 @@ namespace AuthServer.Controllers.Version1
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> GetPolicy(string name)
         {
-            Policy policy = await Task.Run(() => _unitOfWork.PolicyRepository.GetByOrganisation(name, HttpContext.GetOrganisationID()));
+            Policy policy = await  _unitOfWork.PolicyRepository.GetByOrganisationAsync(name, HttpContext.GetOrganisationID());
 
             if (policy == null)
             {
@@ -97,19 +101,25 @@ namespace AuthServer.Controllers.Version1
         ///<response code="200"> Policies retrieved.</response>
         [HttpGet(ApiRoutes.Policies.GetAll)]
         [ProducesResponseType(typeof(PagedResponse<GetResponse>), 200)]
-        public async Task<IActionResult> GetPolicies()
+        public async Task<IActionResult> GetPolicies([FromQuery] PaginationQuery query)
         {
-            //TODO Generic response
-            IEnumerable<Policy> policies = await Task.Run(() => _unitOfWork.PolicyRepository.GetAllByOrganisation(HttpContext.GetOrganisationID()));
+            var pageFilter = _mapper.Map<PageFilter>(query);
 
-            if (!policies.Any())
-            {
-                return Ok();
+            IEnumerable<Policy> policies = await _unitOfWork.PolicyRepository.GetAllByOrganisationAsync(
+                HttpContext.GetOrganisationID(),
+                pageFilter
+                );
+
+            var getResponses = _mapper.Map<List<GetResponse>>(policies);
+
+            if(pageFilter == null || pageFilter.PageNumber < 1 || pageFilter.PageSize < 1){
+                return Ok(new PagedResponse<GetResponse>(getResponses));
             }
 
-            IEnumerable<GetResponse> getResponses = policies.Select(policy => _mapper.Map<GetResponse>(policy));
+            var pagedResponse = Paginator.CreatePagedResponse(_URIService, pageFilter, getResponses);
             
-            return Ok(new PagedResponse<GetResponse>(getResponses));
+            return Ok(pagedResponse);
+               
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using AuthServer.Models.Entities;
+﻿using AuthServer.Models.DTOs;
+using AuthServer.Models.Entities;
 using AuthServer.Persistence.Contexts;
 using AuthServer.Persistence.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -16,14 +17,24 @@ namespace AuthServer.Persistence.Repositories
         {
         }
 
-        public Task<List<User>> GetAllByOrganisation(string organisationID)
+        public Task<List<User>> GetAllByOrganisationAsync(string organisationID, PageFilter filter)
         {
-            return AppContext.Users
-            .Where(user => user.Organisation.ID == organisationID)
-            .ToListAsync();
+            IQueryable<User> baseQuery = AppContext.Users.Where(user => user.Organisation.ID == organisationID);
+
+            if (filter == null) //will never be null but good to handle for if one day can be made null
+            {
+                return baseQuery.ToListAsync();
+            }
+
+            // eg given pageNumber = 3 && given pageSize = 10
+            // 3 - 1 = 2;  2 * 10 = 20
+            // hence skip 20 records as each page contains 10 and we are skipping pages 1 and 2
+            var recordsToSkip  = (filter.PageNumber - 1) * filter.PageSize;
+
+            return baseQuery.Skip(recordsToSkip).Take(filter.PageSize).ToListAsync();
         }
 
-        public Task<User> GetByOrganisation(string ID, string organisationID)
+        public Task<User> GetByOrganisationAsync(string ID, string organisationID)
         {
             return AppContext.Users
             .Where(user => user.Id == ID && user.Organisation.ID == organisationID)
@@ -32,7 +43,7 @@ namespace AuthServer.Persistence.Repositories
             .SingleOrDefaultAsync();
         }
 
-        public Task<User> GetByEmail(string email)
+        public Task<User> GetByEmailAsync(string email)
         {
             return AppContext.Users
             .Include(user => user.Organisation)
@@ -40,7 +51,7 @@ namespace AuthServer.Persistence.Repositories
             .SingleOrDefaultAsync(user => user.Email == email);
         }
 
-        public Task<User> GetWithDetails(string ID, string organisationID)
+        public Task<User> GetWithDetailsAsync(string ID, string organisationID)
         {
             return AppContext.Users
             .Where(user => user.Id == ID && user.Organisation.ID == organisationID)
@@ -49,12 +60,13 @@ namespace AuthServer.Persistence.Repositories
             .SingleOrDefaultAsync();
         }
 
-        public IEnumerable<User> GetByUserName(string firstName, string lastName, string organisationID)
+        public Task<List<User>> GetByUserNameAsync(string firstName, string lastName, string organisationID)
         {
            return AppContext.Users
             .Where(u => u.FirstName == firstName && u.LastName == lastName && u.Organisation.ID == organisationID)
             ?.OrderBy(u => u.FirstName)
-            .ThenBy(u => u.LastName);
+            .ThenBy(u => u.LastName)
+            .ToListAsync();
         }
 
         public User CreateUser(RegistrationRequest request, Organisation organisation, Policy policy)

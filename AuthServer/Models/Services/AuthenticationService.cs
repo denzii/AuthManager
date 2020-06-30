@@ -98,7 +98,7 @@ namespace AuthServer.Models.Services
 
         public async Task<LoginResponse> LoginUserAsync(LoginRequest request)
         {
-            User existingUser = await Task.Run(() => _unitOfWork.UserRepository.GetByEmail(request.Email));
+            User existingUser = await _unitOfWork.UserRepository.GetByEmailAsync(request.Email);
 
             Dictionary<string, string> tokens = tokens = await GetTokens(existingUser);
             tokens.TryGetValue("SecurityToken", out string securityToken);
@@ -156,7 +156,7 @@ namespace AuthServer.Models.Services
             await _unitOfWork.CompleteAsync();
 
             string userID = validatedToken.Claims.Single(claim => claim.Type == "ID").Value;
-            User user = await _unitOfWork.UserRepository.GetWithDetails(userID, organisationID);
+            User user = await _unitOfWork.UserRepository.GetWithDetailsAsync(userID, organisationID);
 
             Dictionary<string, string> tokens = await GetTokens(user);
             tokens.TryGetValue("SecurityToken", out string securityToken);

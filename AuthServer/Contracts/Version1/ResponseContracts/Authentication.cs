@@ -34,7 +34,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
         {
             public string Token { get; set; }
             public string RefreshToken { get; set; }
-            public string Id { get; set; }
+            public string ID { get; set; }
             public string Email { get; set; }
             public DateTime RegisteredOn { get; set; }
         }
@@ -46,7 +46,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
                 {
                     Token = DataFixtures.Token,
                     RefreshToken = DataFixtures.RefreshToken,
-                    Id = DataFixtures.Identifier,
+                    ID = DataFixtures.Identifier,
                     Email = DataFixtures.Email2,
                     RegisteredOn = DataFixtures.Now
                 };
