@@ -24,7 +24,7 @@ namespace AuthServer.Configurations.ServiceInjectors
 				//used to call the endpoint is what they will get in the response
 				var accessor = sProvider.GetRequiredService<IHttpContextAccessor>();
 				var request = accessor.HttpContext.Request;
-				var absoluteURI = string.Concat(request.Scheme, "://", request.Host.ToUriComponent(), "/");
+				var absoluteURI = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
 
 				return new URIService(absoluteURI);
 			});

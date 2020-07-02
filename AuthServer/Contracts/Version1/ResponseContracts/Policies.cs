@@ -78,8 +78,8 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
                 return new PagedResponse<GetResponse>(responseExamples){
                     PageNumber = 2,
                     PageSize = 10,
-                    NextPage = "URI",
-                    PreviousPage = "URI"
+                    NextPage = DataFixtures.PreviousPage,
+                    PreviousPage = DataFixtures.NextPage
                 };
             }
         }

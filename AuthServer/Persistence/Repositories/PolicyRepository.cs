@@ -19,7 +19,9 @@ namespace AuthServer.Persistence.Repositories
 
         public Task<List<Policy>> GetAllByOrganisationAsync(string organisationID, PageFilter filter = null)
         {
-            IQueryable<Policy> baseQuery = AppContext.Policies.Where(policy => policy.Organisation.ID == organisationID);
+            IQueryable<Policy> baseQuery = AppContext.Policies
+            .Include(policy => policy.Users)
+            .Where(policy => policy.Organisation.ID == organisationID);
 
             if (filter == null) //will never be null but good to handle for if one day can be made null
             {

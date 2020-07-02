@@ -50,6 +50,7 @@ namespace AuthServer.Controllers.Version1
             Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.OrganisationName);
             User newUser =  _unitOfWork.UserRepository.CreateUser(request, organisation, null);
 
+            var transaction = _unitOfWork.UserRepository.BeginTransaction();
             List<ErrorResponse> errorResponses = await _authService.ValidateRegistrationAsync(request, organisation, newUser);
             
             if (errorResponses.Any()){
@@ -57,6 +58,7 @@ namespace AuthServer.Controllers.Version1
             }
 
             RegistrationResponse registrationResponse = await _authService.RegisterUserAsync(request, organisation, newUser);
+            await transaction.CommitAsync();
             var locationURI = _URIService.GetUserURI(registrationResponse.ID);
 
             return Created(locationURI, new Response<RegistrationResponse>(registrationResponse));
@@ -64,7 +66,6 @@ namespace AuthServer.Controllers.Version1
 
         /// <summary>
         /// Authenticates user to provide a JSON Web Token alongside a Refresh Token.
-        /// If the user to be created is the first one within that organisation, the user is created with the Admin role by default.
         /// </summary>
         ///<response code="200"> Provides a JWT and Refresh Token.</response>
         ///<response code="400"> Incorrect data, failed to authenticate.</response>

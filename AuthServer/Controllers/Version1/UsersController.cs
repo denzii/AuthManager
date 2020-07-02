@@ -62,7 +62,7 @@ namespace AuthServer.Controllers.Version1
                 return Ok(new PagedResponse<GetResponse>(getResponses));
             }
 
-            var pagedResponse = Paginator.CreatePagedResponse(_URIService, pageFilter, getResponses);
+            var pagedResponse = Paginator.CreatePagedResponse(_URIService, pageFilter, getResponses, HttpContext.Request.Path);
 
             return Ok(pagedResponse);
         }

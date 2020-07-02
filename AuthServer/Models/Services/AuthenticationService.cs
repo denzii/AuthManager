@@ -50,15 +50,16 @@ namespace AuthServer.Models.Services
 
             if (user != null)
             {
-                errorResponses.Add(new ErrorResponse{Message = "Email is already registered"});
+                errorResponses.Add(new ErrorResponse { Message = "Email is already registered" });
             }
 
             if (organisation == null)
             {
-                errorResponses.Add(new ErrorResponse{Message = "No Organisation found with the given Organisation Name"});
+                errorResponses.Add(new ErrorResponse { Message = "No Organisation found with the given Organisation Name" });
             }
 
-            if(errorResponses.Any()){
+            if (errorResponses.Any())
+            {
                 return errorResponses;
             }
 
@@ -69,31 +70,26 @@ namespace AuthServer.Models.Services
 
         public async Task<RegistrationResponse> RegisterUserAsync(RegistrationRequest request, Organisation organisation, User newUser)
         {
-            using (var transaction = _unitOfWork.UserRepository.BeginTransaction())
+            if (!organisation.Users.Skip(1).Any() && organisation.Users.Where(user => user.Email == newUser.Email).Any())
             {
-                if (!organisation.Users.Any())
-                {
-                    Policy adminPolicy = organisation.Policies.FirstOrDefault();
-                    newUser.Policy = adminPolicy;
+                Policy adminPolicy = organisation.Policies.FirstOrDefault();
+                newUser.Policy = adminPolicy;
 
-                    await _userManager.AddClaimAsync(newUser, new Claim(adminPolicy.Claim, "true"));
-                }
-
-                await _unitOfWork.CompleteAsync();
-                Dictionary<string, string> tokens = await GetTokens(newUser);
-
-                RegistrationResponse response = _mapper.Map<RegistrationResponse>(newUser);
-
-                tokens.TryGetValue("SecurityToken", out string securityToken);
-                tokens.TryGetValue("RefreshToken", out string refreshToken);
-
-                response.Token = securityToken;
-                response.RefreshToken = refreshToken;
-
-                transaction.Commit();
-
-                return response;
+                await _userManager.AddClaimAsync(newUser, new Claim(adminPolicy.Claim, "true"));
             }
+
+            await _unitOfWork.CompleteAsync();
+            Dictionary<string, string> tokens = await GetTokens(newUser);
+
+            RegistrationResponse response = _mapper.Map<RegistrationResponse>(newUser);
+
+            tokens.TryGetValue("SecurityToken", out string securityToken);
+            tokens.TryGetValue("RefreshToken", out string refreshToken);
+
+            response.Token = securityToken;
+            response.RefreshToken = refreshToken;
+
+            return response;
         }
 
         public async Task<LoginResponse> LoginUserAsync(LoginRequest request)
@@ -210,8 +206,8 @@ namespace AuthServer.Models.Services
                 {
                     new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim("ID", user.Id.ToString()),
-                    new Claim("OrganisationID", user.Organisation.ID.ToString())
+                    new Claim("ID", user.Id),
+                    new Claim("OrganisationID", user.Organisation.ID)
                 };
 
             var userClaims = await _userManager.GetClaimsAsync(user);

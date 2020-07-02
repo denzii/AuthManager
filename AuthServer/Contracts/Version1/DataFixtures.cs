@@ -31,6 +31,8 @@ namespace AuthServer.Contracts.Version1
         public const string ErrorMessage = "Something went wrong with the operation.";
         public const string PolicyGenericInfo = "Operation Successful, please login again for the changes to take effect";
         public const string Identifier = "5";
+        public const string PreviousPage = "https://localhost:5001/api/v1/Policies?pageNumber=1&pageSize=10";
+        public const string NextPage = "https://localhost:5001/api/v1/Policies?pageNumber=3&pageSize=10";
         public static string GUID = Guid.NewGuid().ToString();
         public static DateTime Now = DateTime.Now; 
     }

@@ -45,7 +45,6 @@ namespace AuthServer.Controllers.Version1
         ///<response code="400"> Organisation does not exist.</response>
         [HttpGet(ApiRoutes.Organisations.Get)]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]       
         [ProducesResponseType(typeof(Response<GetResponse>), 200)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> GetOrganisation(string ID)

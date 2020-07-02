@@ -2,6 +2,11 @@ namespace AuthServer.Contracts.Version1.RequestContracts.Queries
 {
     public class PaginationQuery
     {
+        public PaginationQuery()
+        {
+            
+        }
+        
         public PaginationQuery(int pageNumber = 1, int pageSize = 10)
         {
             PageNumber = pageNumber;

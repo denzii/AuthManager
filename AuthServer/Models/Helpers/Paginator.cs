@@ -9,18 +9,18 @@ namespace AuthServer.Models.Helpers
 {
     public class Paginator
     {
-        public static PagedResponse<T> CreatePagedResponse<T>(IURIService URIService, PageFilter filter, List<T> responses){
+        public static PagedResponse<T> CreatePagedResponse<T>(IURIService URIService, PageFilter filter, List<T> responses, string path){
             string nextPage = filter.PageNumber >= 1 
-            ? URIService.GetPaginationURI(new PaginationQuery(filter.PageNumber +1, filter.PageSize)).ToString()
+            ? URIService.GetPaginationURI(path, new PaginationQuery(filter.PageNumber +1, filter.PageSize)).ToString()
             : null;
 
             string previousPage = filter.PageNumber - 1 >= 1 
-            ? URIService.GetPaginationURI(new PaginationQuery(filter.PageNumber -1, filter.PageSize)).ToString()
+            ? URIService.GetPaginationURI(path, new PaginationQuery(filter.PageNumber -1, filter.PageSize)).ToString()
             : null;
             
             return new PagedResponse<T>(){
                     Data = responses,
-                    PageNumber = filter.PageNumber > 1 ? filter.PageNumber : (int?) null,
+                    PageNumber = filter.PageNumber >= 1 ? filter.PageNumber : (int?) null,
                     PageSize = filter.PageSize >= 1 ? filter.PageSize : (int?) null,
                     NextPage = responses.Any() ? nextPage : null,
                     PreviousPage = previousPage
