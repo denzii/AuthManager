@@ -8,7 +8,9 @@ namespace AuthServer.Models.Services.Interfaces
         Uri GetPaginationURI(string path, PaginationQuery query = null);
 
         Uri GetUserURI(string userID);
+
         Uri GetOrganisationURI(string organisationID);
+        
         Uri GetPolicyURI(string policyName);
     }
 }

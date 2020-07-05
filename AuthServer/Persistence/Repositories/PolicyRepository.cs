@@ -13,9 +13,7 @@ namespace AuthServer.Persistence.Repositories
 {
     public class PolicyRepository : Repository<Policy>, IPolicyRepository
     {
-        public PolicyRepository(AuthServerContext context) : base(context)
-        {
-        }
+        public PolicyRepository(AuthServerContext context) : base(context){ }
 
         public Task<List<Policy>> GetAllByOrganisationAsync(string organisationID, PageFilter filter = null)
         {

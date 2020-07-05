@@ -10,7 +10,13 @@ using AuthServer.Models.DTOs;
 using AuthServer.Models.Entities;
 using AuthServer.Models.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -35,6 +41,33 @@ namespace Tests.Helpers
             var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(DataFixtures.TokenSecret));
             
             return new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256Signature);
+        }
+
+        public static ActionExecutingContext MockActionExecutingContext()
+        {
+            
+            var actionContext = new ActionContext(
+                new DefaultHttpContext(),
+                (new Mock<RouteData>()).Object,
+                (new Mock<ActionDescriptor>()).Object,
+                new ModelStateDictionary()
+            );
+
+            return new ActionExecutingContext(
+                actionContext,
+                new List<IFilterMetadata>(),
+                new Dictionary<string, object>(),
+                new Mock<Controller>()
+            );
+        }
+
+        public static SecurityTokenDescriptor MockSecurityTokenDescriptor()
+        {
+            return new SecurityTokenDescriptor()
+            {
+                Expires = DateTime.UtcNow.Add(DataFixtures.TokenLifetime),
+                SigningCredentials =  MockSigningCredentials()
+            };
         }
 
         public static User MockUser()

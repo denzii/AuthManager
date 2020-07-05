@@ -15,7 +15,7 @@ namespace AuthServer.Models.Services
             _baseURI = baseURI; 
         }
 
-        public Uri GetPaginationURI(string path, PaginationQuery query = null)
+        public Uri GetPaginationURI(string endpointPath, PaginationQuery query = null)
         {
             var URI = new Uri(_baseURI);
 
@@ -23,12 +23,12 @@ namespace AuthServer.Models.Services
                 return URI;
             }
 
-            var endpointURI = $"{_baseURI}{path}";
+            var endpointURI = $"{_baseURI}{endpointPath}";
 
-            var modifiedURI = QueryHelpers.AddQueryString(endpointURI,"pageNumber", query.PageNumber.ToString());
-            modifiedURI = QueryHelpers.AddQueryString(modifiedURI, "pageSize", query.PageSize.ToString());
+            var paginatedURI = QueryHelpers.AddQueryString(endpointURI,"pageNumber", query.PageNumber.ToString());
+            paginatedURI = QueryHelpers.AddQueryString(paginatedURI, "pageSize", query.PageSize.ToString());
 
-            return new Uri(modifiedURI);
+            return new Uri(paginatedURI);
         }
 
         public Uri GetOrganisationURI(string organisationID)

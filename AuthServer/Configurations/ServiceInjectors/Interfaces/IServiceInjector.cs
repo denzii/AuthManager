@@ -9,6 +9,6 @@ namespace AuthServer.Configurations.ServiceInjectors.Interfaces
 {
 	public interface IServiceInjector
 	{
-		public void InjectServices(IConfiguration configuration, IServiceCollection services);
+		void InjectServices(IConfiguration configuration, IServiceCollection services);
 	}
 }

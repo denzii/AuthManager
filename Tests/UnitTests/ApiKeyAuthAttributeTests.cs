@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using Tests.Helpers;
 using Xunit;
 
 namespace Tests.UnitTests
@@ -36,48 +37,20 @@ namespace Tests.UnitTests
         public async Task OnActionExecutionAsync_ApiKeyNotPresent_Test()
         {
             //arrange
-            var modelState = new ModelStateDictionary();
-
-            var actionContext = new ActionContext(
-                new DefaultHttpContext(),
-                (new Mock<RouteData>()).Object,
-                (new Mock<ActionDescriptor>()).Object,
-                modelState
-            );
-
-            var actionExecutingContext = new ActionExecutingContext(
-                actionContext,
-                new List<IFilterMetadata>(),
-                new Dictionary<string, object>(),
-                new Mock<Controller>()
-            );
+            ActionExecutingContext context = MockConfigurator.MockActionExecutingContext();
 
             //act
-            await _middleware.OnActionExecutionAsync(actionExecutingContext, _next.Object);
+            await _middleware.OnActionExecutionAsync(context, _next.Object);
 
             //assert
-            Assert.IsType<UnauthorizedResult>(actionExecutingContext.Result);
+            Assert.IsType<UnauthorizedResult>(context.Result);
         }
 
         [Fact]
         public async Task OnActionExecutionAsync_SuccessScenario_Test()
         {
             //arrange
-            var modelState = new ModelStateDictionary();
-
-            var actionContext = new ActionContext(
-                new DefaultHttpContext(),
-                (new Mock<RouteData>()).Object,
-                (new Mock<ActionDescriptor>()).Object,
-                modelState
-            );
-
-            var actionExecutingContext = new ActionExecutingContext(
-                actionContext,
-                new List<IFilterMetadata>(),
-                new Dictionary<string, object>(),
-                new Mock<Controller>()
-            );
+            var context = MockConfigurator.MockActionExecutingContext();
 
             var requestServices = new Mock<IServiceProvider>();
             var config = new Mock<IConfiguration>();
@@ -90,16 +63,16 @@ namespace Tests.UnitTests
 
             config.Setup(config => config.GetSection(It.IsAny<String>())).Returns(configSection.Object);
 
-            actionExecutingContext.HttpContext.RequestServices = requestServices.Object;
+            context.HttpContext.RequestServices = requestServices.Object;
 
             //add a header to emulate successful response
-            actionExecutingContext.HttpContext.Request.Headers.Add(ApiKeyAuthAttribute.ApiKeyHeaderName, $"ApiKey {DataFixtures.ApiKeyValue}");          
+            context.HttpContext.Request.Headers.Add(ApiKeyAuthAttribute.ApiKeyHeaderName, $"ApiKey {DataFixtures.ApiKeyValue}");          
 
             //act
-            await _middleware.OnActionExecutionAsync(actionExecutingContext, _next.Object);
+            await _middleware.OnActionExecutionAsync(context, _next.Object);
 
             //assert
-            Assert.Null(actionExecutingContext.Result);
+            Assert.Null(context.Result);
         }
 
         public void Dispose()

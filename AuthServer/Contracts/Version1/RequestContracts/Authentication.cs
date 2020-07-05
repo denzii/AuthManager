@@ -9,7 +9,8 @@ namespace AuthServer.Contracts.Version1.RequestContracts
 {
     public static class Authentication
     {
-        public class LoginRequest {
+        public class LoginRequest 
+        {
             public string Email { get; set; }
             public string Password { get; set; }
         }
@@ -36,9 +37,6 @@ namespace AuthServer.Contracts.Version1.RequestContracts
                     Password = DataFixtures.Password
                 };
             }
-
-            public string Email { get; set; }
-            public string Password { get; set; }
         }
 
         public class RegistrationRequest

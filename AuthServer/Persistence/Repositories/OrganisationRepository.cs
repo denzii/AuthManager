@@ -11,9 +11,7 @@ namespace AuthServer.Persistence.Repositories
 {
 	public class OrganisationRepository : Repository<Organisation>, IOrganisationRepository
     {
-        public OrganisationRepository(AuthServerContext context) : base(context)
-        {
-        }
+        public OrganisationRepository(AuthServerContext context) : base(context){ }
 
         public Task<List<Organisation>> GetAllWithUsers(){
             return AppContext.Organisations

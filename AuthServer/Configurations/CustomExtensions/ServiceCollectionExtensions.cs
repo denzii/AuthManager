@@ -29,22 +29,5 @@ namespace AuthServer.Configurations.CustomExtensions
 
             serviceInjectors.ForEach(sInjector => sInjector.InjectServices(configuration, services));
         }
-
-        public static void InjectJwtBearerAuthSettings(this IServiceCollection services, IConfiguration configuration)
-		{
-            //Get All Types in the codebase, Refine the results to the concrete ones implementing IServiceInjector
-            List<Type> serviceInjectorTypes = typeof(Startup).Assembly.GetExportedTypes()
-                .Where(type => typeof(AuthServicesInjector).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
-                .ToList();
-
-            //Project the Types acquired into instances of the types
-            //cast the instantiated Objects into strictly typed ones (IServiceInjectors) so they can be collected in a list.
-            List<IServiceInjector> serviceInjectors = serviceInjectorTypes
-                .Select(Activator.CreateInstance)
-                .Cast<IServiceInjector>()
-                .ToList();
-
-            serviceInjectors.ForEach(sInjector => sInjector.InjectServices(configuration, services));
-        }
 	}
 }

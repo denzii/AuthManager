@@ -9,7 +9,9 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 	public interface IRefreshTokenRepository : IRepository<RefreshToken>
 	{
 		Task<RefreshToken> GetRefreshToken(string refreshToken);
+
 		void Update(RefreshToken storedRefreshToken);
+		
 		RefreshToken CreateRefreshToken(string jwtID, string userID);
 	}
 }

@@ -14,21 +14,21 @@ using Microsoft.AspNetCore.Http;
 
 namespace AuthServer.Configurations.ServiceInjectors
 {
-	public class WorkerServicesInjector : IServiceInjector
-	{
-		public void InjectServices(IConfiguration configuration, IServiceCollection services)
-		{
-			services.AddScoped<IAuthenticationService, AuthenticationService>();
-			services.AddScoped<IURIService, URIService>(sProvider => {
-				//set up the service in a way that guarantees that the URL the user 
-				//used to call the endpoint is what they will get in the response
-				var accessor = sProvider.GetRequiredService<IHttpContextAccessor>();
-				var request = accessor.HttpContext.Request;
-				var absoluteURI = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
+    public class WorkerServicesInjector : IServiceInjector
+    {
+        public void InjectServices(IConfiguration configuration, IServiceCollection services)
+        {
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<ITokenService, TokenService>();
 
-				return new URIService(absoluteURI);
-			});
-			services.AddScoped<ITokenService, TokenService>();
-		}
-	}
+            services.AddScoped<IURIService, URIService>(sProvider => {
+                //set up the service in a way which guarantees the base url to be the same as the one accessed by user
+                var accessor = sProvider.GetRequiredService<IHttpContextAccessor>();
+                HttpRequest request = accessor.HttpContext.Request;
+                var absoluteURI = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
+
+                return new URIService(absoluteURI);
+            });
+        }
+    }
 }

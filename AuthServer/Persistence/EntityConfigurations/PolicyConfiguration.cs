@@ -8,7 +8,10 @@ namespace AuthServer.Persistence.EntityConfigurations
 	{
 		public void Configure(EntityTypeBuilder<Policy> modelBuilder)
 		{			
-			modelBuilder.HasKey(policy => new {policy.Name, policy.OrganisationID});
+			modelBuilder.HasKey(policy => new {
+				policy.Name, 
+				policy.OrganisationID
+				});
 			
 			modelBuilder
 			.HasOne(policy => policy.Organisation)

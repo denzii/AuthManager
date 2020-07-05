@@ -73,9 +73,6 @@ namespace AuthServer.Controllers.Version1
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> PostOrganisation(PostRequest request)
         {
-            //TODO Implement internal JWT to authorize clients and selectively allow hitting this endpoint on
-            // Currently publicly accessible.
-
             Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.Name);
 
             if (organisation != null)
@@ -83,11 +80,10 @@ namespace AuthServer.Controllers.Version1
                 return BadRequest(new ErrorResponse{Message = "An organisation with the specified name already exists"});
             }
 
-            //organisationID is guid since a reference to the organisationID is required before the organisation is created
-            // (both of the related entities have to be generated together)
+            //organisationID is not db generated as a reference is required before db record creation
             string organisationID = Guid.NewGuid().ToString();
 
-            var policy = new Policy { Name = AuthorizationPolicies.AdminPolicy, Claim = AuthorizationPolicies.AdminClaim, OrganisationID = organisationID };
+            var policy = new Policy { Name = InternalPolicies.AdminPolicy, Claim = InternalPolicies.AdminClaim, OrganisationID = organisationID };
 
             var organisationPolicies = new List<Policy> { policy };
 

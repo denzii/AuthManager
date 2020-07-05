@@ -57,7 +57,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
         {
             public PagedResponse<GetResponse> GetExamples()
             {
-                var responseExamples = new List<GetResponse>{
+                var responseExamples = new List<GetResponse> {
                     new GetResponse {
                     Name = DataFixtures.PolicyName2,
                     Claim = DataFixtures.PolicyClaim2,

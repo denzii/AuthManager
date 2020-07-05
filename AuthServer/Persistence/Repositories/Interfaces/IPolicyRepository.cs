@@ -12,6 +12,7 @@ namespace AuthServer.Persistence.Repositories.Interfaces
         Task<Policy> GetByOrganisationAsync(string ID, string organisationID);
 
         Task<List<Policy>> GetAllByOrganisationAsync (string organisationID, PageFilter filter = null);
+        
         Task<bool> PolicyExistAsync(string name, string organisationID);
     }
 }
