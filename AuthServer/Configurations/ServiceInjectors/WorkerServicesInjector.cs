@@ -28,6 +28,7 @@ namespace AuthServer.Configurations.ServiceInjectors
 
 				return new URIService(absoluteURI);
 			});
+			services.AddScoped<ITokenService, TokenService>();
 		}
 	}
 }

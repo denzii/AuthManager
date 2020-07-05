@@ -115,7 +115,7 @@ namespace AuthServer.Contracts.Version1.RequestContracts
             {
                 return new RefreshTokenRequest
                 {
-                    Token = DataFixtures.Token,
+                    Token = DataFixtures.Token1,
                     RefreshToken = DataFixtures.RefreshToken
                 };
             }

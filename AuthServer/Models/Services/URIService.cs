@@ -33,17 +33,17 @@ namespace AuthServer.Models.Services
 
         public Uri GetOrganisationURI(string organisationID)
         {
-            return new Uri(_baseURI + ApiRoutes.Organisations.Get.Replace("{ID}", organisationID));
+            return new Uri(_baseURI + "/" + ApiRoutes.Organisations.Get.Replace("{ID}", organisationID));
         }
 
         public Uri GetPolicyURI(string policyName)
         {
-            return new Uri(_baseURI + ApiRoutes.Policies.Get.Replace("{Name}", policyName));
+            return new Uri(_baseURI + "/" + ApiRoutes.Policies.Get.Replace("{Name}", policyName));
         }
 
         public Uri GetUserURI(string userID)
         {
-            return new Uri(_baseURI + ApiRoutes.Users.Get.Replace("{ID}", userID));
+            return new Uri(_baseURI + "/" + ApiRoutes.Users.Get.Replace("{ID}", userID));
         }
     }
 }

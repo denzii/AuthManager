@@ -16,6 +16,7 @@ using AuthServer.Models.Entities;
 using System.Collections;
 using System.Collections.Generic;
 using AuthServer.Contracts.Version1.ResponseContracts;
+using AuthServer.Models.Helpers;
 
 namespace AuthServer.Controllers.Version1
 {
@@ -29,11 +30,19 @@ namespace AuthServer.Controllers.Version1
 
         private readonly IURIService _URIService;
 
-        public AuthenticationController(IUnitOfWork unitOfWork, IAuthenticationService authService, IURIService URIService)
+        private readonly ITokenService _tokenService;
+
+        public AuthenticationController(
+            IUnitOfWork unitOfWork,
+            IAuthenticationService authService,
+            IURIService URIService,
+            ITokenService tokenService
+            )
         {
             _unitOfWork = unitOfWork;
             _authService = authService;
             _URIService = URIService;
+            _tokenService = tokenService;
         }
 
         /// <summary>
@@ -58,8 +67,16 @@ namespace AuthServer.Controllers.Version1
             }
 
             RegistrationResponse registrationResponse = await _authService.RegisterUserAsync(request, organisation, newUser);
-            await transaction.CommitAsync();
             var locationURI = _URIService.GetUserURI(registrationResponse.ID);
+
+            Dictionary<string, string> tokens = await _tokenService.GetTokensAsync(newUser);
+            await transaction.CommitAsync();
+
+            tokens.TryGetValue("SecurityToken", out string securityToken);
+            tokens.TryGetValue("RefreshToken", out string refreshToken);
+
+            registrationResponse.Token = securityToken;
+            registrationResponse.RefreshToken = refreshToken;
 
             return Created(locationURI, new Response<RegistrationResponse>(registrationResponse));
         }
@@ -79,7 +96,20 @@ namespace AuthServer.Controllers.Version1
                 return BadRequest( new ErrorResponse { Message = "User with the given email address could not be found." });
             }
 
-            LoginResponse loginResponse = await _authService.LoginUserAsync(request);
+            User user = await _unitOfWork.UserRepository.GetByEmailAsync(request.Email);
+
+            LoginResponse loginResponse = await _authService.LoginUserAsync(request, user);
+
+            if (loginResponse == null){
+                return BadRequest("Password is not valid");
+            }
+            Dictionary<string, string> tokens = tokens = await _tokenService.GetTokensAsync(user);
+
+            tokens.TryGetValue("SecurityToken", out string securityToken);
+            tokens.TryGetValue("RefreshToken", out string refreshToken);
+
+            loginResponse.Token = securityToken;
+            loginResponse.RefreshToken = refreshToken;
 
             return Ok(new Response<LoginResponse>(loginResponse));
         }
@@ -94,22 +124,26 @@ namespace AuthServer.Controllers.Version1
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            ClaimsPrincipal validatedToken = _authService.IsTokenAuthentic(request.Token);
+            ClaimsPrincipal validatedToken = _tokenService.IsTokenAuthentic(request.Token);
 
             if(validatedToken == null)
             {
                 return BadRequest(new ErrorResponse { Message = "This token has been tampered with." });
             }
 
-            RefreshToken refreshToken = await _authService.CanTokenBeRefreshed(validatedToken, request.RefreshToken);
+            RefreshToken refreshToken = await _tokenService.CanTokenBeRefreshedAsync(validatedToken, request.RefreshToken);
 
             if (refreshToken == null){
                 return BadRequest( new ErrorResponse { Message = "Invalid Token, cannot refresh." });
             }
             
-            string organisationID = validatedToken.Claims.Single(x => x.Type == "OrganisationID").Value;
+            string organisationID = ClaimHelper.GetNamedClaim(validatedToken, "OrganisationID");
+            
+            var transaction = _unitOfWork.RefreshTokenRepository.BeginTransaction();
 
-            RefreshTokenResponse refreshTokenResponse = await _authService.RefreshTokenAsync(validatedToken, refreshToken, organisationID);
+            RefreshTokenResponse refreshTokenResponse = await _tokenService.RefreshTokenAsync(validatedToken, refreshToken, organisationID);
+
+            transaction.Commit();
 
             return Ok(new Response<RefreshTokenResponse>(refreshTokenResponse));
         }

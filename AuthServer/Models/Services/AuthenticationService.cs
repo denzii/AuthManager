@@ -23,23 +23,17 @@ namespace AuthServer.Models.Services
     public class AuthenticationService : IAuthenticationService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly JWTBearerAuthConfig _jwtConfig;
         private readonly IMapper _mapper;
-        private readonly TokenValidationParameters _tokenValidationParameters;
         private readonly UserManager<User> _userManager;
 
         public AuthenticationService(
             IUnitOfWork unitOfWork,
-            JWTBearerAuthConfig jwtConfig,
             IMapper mapper,
-            TokenValidationParameters tokenValidationParameters,
             UserManager<User> userManager
             )
         {
             _unitOfWork = unitOfWork;
-            _jwtConfig = jwtConfig;
             _mapper = mapper;
-            _tokenValidationParameters = tokenValidationParameters;
             _userManager = userManager;
         }
 
@@ -79,163 +73,152 @@ namespace AuthServer.Models.Services
             }
 
             await _unitOfWork.CompleteAsync();
-            Dictionary<string, string> tokens = await GetTokens(newUser);
 
-            RegistrationResponse response = _mapper.Map<RegistrationResponse>(newUser);
-
-            tokens.TryGetValue("SecurityToken", out string securityToken);
-            tokens.TryGetValue("RefreshToken", out string refreshToken);
-
-            response.Token = securityToken;
-            response.RefreshToken = refreshToken;
-
-            return response;
+            return _mapper.Map<RegistrationResponse>(newUser);
         }
 
-        public async Task<LoginResponse> LoginUserAsync(LoginRequest request)
+        public async Task<LoginResponse> LoginUserAsync(LoginRequest request, User user)
         {
-            User existingUser = await _unitOfWork.UserRepository.GetByEmailAsync(request.Email);
+            bool loginValid = await _userManager.CheckPasswordAsync(user, request.Password);
 
-            Dictionary<string, string> tokens = tokens = await GetTokens(existingUser);
-            tokens.TryGetValue("SecurityToken", out string securityToken);
-            tokens.TryGetValue("RefreshToken", out string refreshToken);
-
-            LoginResponse response = _mapper.Map<LoginResponse>(existingUser);
-
-            response.Token = securityToken;
-            response.RefreshToken = refreshToken;
-
-            return response;
-        }
-
-        public ClaimsPrincipal IsTokenAuthentic(string token)
-        {
-            return GetClaimsPrincipalFromToken(token);
-        }
-
-        public async Task<RefreshToken> CanTokenBeRefreshed(ClaimsPrincipal validatedToken, string refreshToken)
-        {
-            var expiryDateUnix = long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
-
-            //if not expired, dont let user refresh
-            //tokens contain time in unix format.
-            //unix epoch (1970 1 1 000) is used to calculate unix time
-            //unix time (nr of seconds elapsed since epoch)
-            DateTime expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-                .AddSeconds(expiryDateUnix);
-
-            string jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
-
-
-            RefreshToken storedRefreshToken = await _unitOfWork.RefreshTokenRepository.GetRefreshToken(refreshToken);
-
-            if (expiryDateTimeUtc > DateTime.UtcNow
-                || storedRefreshToken == null
-                || DateTime.UtcNow > storedRefreshToken.ExpiryDate
-                || storedRefreshToken.Invalidated
-                || storedRefreshToken.Used
-                || storedRefreshToken.JwtID != jti)
+            if (!loginValid)
             {
                 return null;
             }
 
-            return storedRefreshToken;
+            LoginResponse response = _mapper.Map<LoginResponse>(user);
+
+            return response;
         }
 
-        public async Task<RefreshTokenResponse> RefreshTokenAsync(ClaimsPrincipal validatedToken, RefreshToken storedRefreshToken, string organisationID)
-        {
+        // public ClaimsPrincipal IsTokenAuthentic(string token)
+        // {
+        //     return _tokenService.GetClaimsPrincipalFromToken(token);
+        // }
 
-            var transaction = _unitOfWork.RefreshTokenRepository.BeginTransaction();
+        // public async Task<RefreshToken> CanTokenBeRefreshed(ClaimsPrincipal validatedToken, string refreshToken)
+        // {
+        //     var expiryDateUnix = long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
 
-            storedRefreshToken.Used = true;
-            _unitOfWork.RefreshTokenRepository.Update(storedRefreshToken);
-            await _unitOfWork.CompleteAsync();
+        //     //if not expired, dont let user refresh
+        //     //tokens contain time in unix format.
+        //     //unix epoch (1970 1 1 000) is used to calculate unix time
+        //     //unix time (nr of seconds elapsed since epoch)
+        //     DateTime expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+        //         .AddSeconds(expiryDateUnix);
 
-            string userID = validatedToken.Claims.Single(claim => claim.Type == "ID").Value;
-            User user = await _unitOfWork.UserRepository.GetWithDetailsAsync(userID, organisationID);
+        //     string jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
 
-            Dictionary<string, string> tokens = await GetTokens(user);
-            tokens.TryGetValue("SecurityToken", out string securityToken);
-            tokens.TryGetValue("RefreshToken", out string newRefreshToken);
 
-            transaction.Commit();
+        //     RefreshToken storedRefreshToken = await _unitOfWork.RefreshTokenRepository.GetRefreshToken(refreshToken);
 
-            return new RefreshTokenResponse
-            {
-                Email = user.Email,
-                Token = securityToken,
-                RefreshToken = newRefreshToken,
-            };
-        }
+        //     if (expiryDateTimeUtc > DateTime.UtcNow
+        //         || storedRefreshToken == null
+        //         || DateTime.UtcNow > storedRefreshToken.ExpiryDate
+        //         || storedRefreshToken.Invalidated
+        //         || storedRefreshToken.Used
+        //         || storedRefreshToken.JwtID != jti)
+        //     {
+        //         return null;
+        //     }
 
-        public ClaimsPrincipal GetClaimsPrincipalFromToken(string token)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
+        //     return storedRefreshToken;
+        // }
 
-            try
-            {
-                TokenValidationParameters tokenValidationParameters = _tokenValidationParameters.Clone();
-                tokenValidationParameters.ValidateLifetime = false;
-                ClaimsPrincipal principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken validatedToken);
+        // public async Task<RefreshTokenResponse> RefreshTokenAsync(ClaimsPrincipal validatedToken, RefreshToken storedRefreshToken, string organisationID)
+        // {
 
-                if (!JwtHasValidAlgorithm(validatedToken))
-                {
-                    return null;
-                }
+        //     var transaction = _unitOfWork.RefreshTokenRepository.BeginTransaction();
 
-                return principal;
-            }
-            catch { return null; }
-        }
+        //     storedRefreshToken.Used = true;
+        //     _unitOfWork.RefreshTokenRepository.Update(storedRefreshToken);
+        //     await _unitOfWork.CompleteAsync();
 
-        private bool JwtHasValidAlgorithm(SecurityToken validatedToken)
-        {
-            // is operator (> C# 7.0), can be used to check if given expression is of type on the right hand side.
-            // StringComparison.InvariantCultureIgnoreCase allows comparing string similarity by disregarding language specific characters
-            return (validatedToken is JwtSecurityToken jwtSecurityToken)
-                && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
-        }
+        //     string userID = validatedToken.Claims.Single(claim => claim.Type == "ID").Value;
+        //     User user = await _unitOfWork.UserRepository.GetWithDetailsAsync(userID, organisationID);
 
-        private async Task<Dictionary<string, string>> GetTokens(User user)
-        {
-            var tokens = new Dictionary<string, string>();
-            var tokenHandler = new JwtSecurityTokenHandler();
-            byte[] key = Encoding.ASCII.GetBytes(_jwtConfig.Secret); //key = secret in ascii bytes
+        //     Dictionary<string, string> tokens = await _tokenService.GetTokens(user);
+        //     tokens.TryGetValue("SecurityToken", out string securityToken);
+        //     tokens.TryGetValue("RefreshToken", out string newRefreshToken);
 
-            var claims = new List<Claim>
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim("ID", user.Id),
-                    new Claim("OrganisationID", user.Organisation.ID)
-                };
+        //     transaction.Commit();
 
-            var userClaims = await _userManager.GetClaimsAsync(user);
-            claims.AddRange(userClaims);
+        //     return new RefreshTokenResponse
+        //     {
+        //         Email = user.Email,
+        //         Token = securityToken,
+        //         RefreshToken = newRefreshToken,
+        //     };
+        // }
 
-            var tokenDescriptor = new SecurityTokenDescriptor()
-            {
-                // SecurityTokenDescriptor takes in an array of Claims wrapped in Claims Identity in its Subject field
-                // This is how we specify exactly what the token must include, each rule is defined as a new Claim
-                // Each Claim is matched against a registered Claim Name or custom "string".
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.Add(_jwtConfig.TokenLifetime),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature
-                    )
-            };
+        // private ClaimsPrincipal GetClaimsPrincipalFromToken(string token)
+        // {
+        //     var tokenHandler = new JwtSecurityTokenHandler();
 
-            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-            RefreshToken refreshToken = await Task.Run(() => _unitOfWork.RefreshTokenRepository.CreateRefreshToken(token.Id, user.Id));
+        //     try
+        //     {
+        //         TokenValidationParameters tokenValidationParameters = _tokenValidationParameters.Clone();
+        //         tokenValidationParameters.ValidateLifetime = false;
+        //         ClaimsPrincipal principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken validatedToken);
 
-            await _unitOfWork.RefreshTokenRepository.AddAsync(refreshToken);
-            _unitOfWork.Complete();
+        //         if (!JwtHasValidAlgorithm(validatedToken))
+        //         {
+        //             return null;
+        //         }
 
-            tokens.Add("SecurityToken", tokenHandler.WriteToken(token));
-            tokens.Add("RefreshToken", refreshToken.Token);
+        //         return principal;
+        //     }
+        //     catch { return null; }
+        // }
 
-            return tokens;
-        }
+        // private bool JwtHasValidAlgorithm(SecurityToken validatedToken)
+        // {
+        //     // is operator (> C# 7.0), can be used to check if given expression is of type on the right hand side.
+        //     // StringComparison.InvariantCultureIgnoreCase allows comparing string similarity by disregarding language specific characters
+        //     return (validatedToken is JwtSecurityToken jwtSecurityToken)
+        //         && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
+        // }
+
+        // private async Task<Dictionary<string, string>> GetTokens(User user)
+        // {
+        //     var tokens = new Dictionary<string, string>();
+        //     var tokenHandler = new JwtSecurityTokenHandler();
+        //     byte[] key = Encoding.ASCII.GetBytes(_jwtConfig.Secret); //key = secret in ascii bytes
+
+        //     var claims = new List<Claim>
+        //         {
+        //             new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+        //             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        //             new Claim("ID", user.Id),
+        //             new Claim("OrganisationID", user.Organisation.ID)
+        //         };
+
+        //     var userClaims = await _userManager.GetClaimsAsync(user);
+        //     claims.AddRange(userClaims);
+
+        //     var tokenDescriptor = new SecurityTokenDescriptor()
+        //     {
+        //         // SecurityTokenDescriptor takes in an array of Claims wrapped in Claims Identity in its Subject field
+        //         // This is how we specify exactly what the token must include, each rule is defined as a new Claim
+        //         // Each Claim is matched against a registered Claim Name or custom "string".
+        //         Subject = new ClaimsIdentity(claims),
+        //         Expires = DateTime.UtcNow.Add(_jwtConfig.TokenLifetime),
+        //         SigningCredentials = new SigningCredentials(
+        //             new SymmetricSecurityKey(key),
+        //             SecurityAlgorithms.HmacSha256Signature
+        //             )
+        //     };
+
+        //     SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+        //     RefreshToken refreshToken =  _unitOfWork.RefreshTokenRepository.CreateRefreshToken(token.Id, user.Id);
+
+        //     await _unitOfWork.RefreshTokenRepository.AddAsync(refreshToken);
+        //     _unitOfWork.Complete();
+
+        //     tokens.Add("SecurityToken", tokenHandler.WriteToken(token));
+        //     tokens.Add("RefreshToken", refreshToken.Token);
+
+        //     return tokens;
+        // }
     }
 }

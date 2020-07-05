@@ -8,8 +8,8 @@ namespace AuthServer.Persistence.Repositories.Interfaces
 {
 	public interface IRefreshTokenRepository : IRepository<RefreshToken>
 	{
-		public Task<RefreshToken> GetRefreshToken(string refreshToken);
-		public void Update(RefreshToken storedRefreshToken);
-		public RefreshToken CreateRefreshToken(string id, string Id);
+		Task<RefreshToken> GetRefreshToken(string refreshToken);
+		void Update(RefreshToken storedRefreshToken);
+		RefreshToken CreateRefreshToken(string jwtID, string userID);
 	}
 }

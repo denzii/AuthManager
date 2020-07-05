@@ -13,13 +13,13 @@ namespace AuthServer.Models.Services.Interfaces
 {
 	public interface IAuthenticationService
 	{
-		Task<LoginResponse> LoginUserAsync(LoginRequest request);
+		Task<LoginResponse> LoginUserAsync(LoginRequest request, User user);
 
-		Task<RefreshTokenResponse> RefreshTokenAsync(ClaimsPrincipal validatedToken, RefreshToken refreshToken, string organisationID);
+		// Task<RefreshTokenResponse> RefreshTokenAsync(ClaimsPrincipal validatedToken, RefreshToken refreshToken, string organisationID);
 
-        ClaimsPrincipal IsTokenAuthentic(string token);
+        // ClaimsPrincipal IsTokenAuthentic(string token);
 
-        Task<RefreshToken> CanTokenBeRefreshed(ClaimsPrincipal validatedToken, string refreshToken);
+        // Task<RefreshToken> CanTokenBeRefreshed(ClaimsPrincipal validatedToken, string refreshToken);
 
 		Task<List<ErrorResponse>> ValidateRegistrationAsync(RegistrationRequest request, Organisation organisation, User newUser);
 

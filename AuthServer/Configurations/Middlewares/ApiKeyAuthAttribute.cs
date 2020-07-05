@@ -11,7 +11,7 @@ namespace AuthServer.Configurations.Middlewares
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class ApiKeyAuthAttribute : Attribute, IAsyncActionFilter
     {
-        private const string ApiKeyHeaderName = "ApiKey";
+        public const string ApiKeyHeaderName = "ApiKey";
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             //can also get it from query string instead of header via =>

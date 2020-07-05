@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace AuthServer.Configurations.ServiceInjectors
 {
@@ -28,10 +29,12 @@ namespace AuthServer.Configurations.ServiceInjectors
 
 
             //JWT Bearer for personal authentication
+            var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtBearerAuthConfig.Secret));
+
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtBearerAuthConfig.Secret)),
+                        IssuerSigningKey = symmetricSecurityKey,
                         ValidateIssuer = false,
                         ValidateAudience = false,
                         RequireExpirationTime = false,
@@ -39,6 +42,13 @@ namespace AuthServer.Configurations.ServiceInjectors
                     };
 
             services.AddSingleton(tokenValidationParameters);
+            services.AddSingleton(symmetricSecurityKey);
+            services.AddSingleton<SigningCredentials>(sCredentials => {
+                return new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256Signature);
+            });
+            services.AddSingleton<SecurityTokenDescriptor>();    
+            services.AddSingleton<JwtSecurityTokenHandler>(); 
+
             services.AddAuthentication(options => { 
                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;

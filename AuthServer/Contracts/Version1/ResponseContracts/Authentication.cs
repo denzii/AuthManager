@@ -21,7 +21,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             {
                 var responseExample = new LoginResponse
                 {
-                    Token = DataFixtures.Token,
+                    Token = DataFixtures.Token1,
                     RefreshToken = DataFixtures.RefreshToken,
                     Email = DataFixtures.Email3
                 };
@@ -44,7 +44,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             {
                 var responseExample = new RegistrationResponse
                 {
-                    Token = DataFixtures.Token,
+                    Token = DataFixtures.Token1,
                     RefreshToken = DataFixtures.RefreshToken,
                     ID = DataFixtures.Identifier,
                     Email = DataFixtures.Email2,
@@ -67,7 +67,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             {
                 var responseExample = new RefreshTokenResponse
                 {
-                    Token = DataFixtures.Token,
+                    Token = DataFixtures.Token1,
                     RefreshToken = DataFixtures.RefreshToken,
                     Email = DataFixtures.Email3
                 };

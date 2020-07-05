@@ -19,7 +19,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             {
                 var responseExample =  new AssignmentResponse
                 {
-                    Token = DataFixtures.Token,
+                    Token = DataFixtures.Token1,
                     RefreshToken = DataFixtures.RefreshToken,
                     UserID = DataFixtures.GUID,
                     PolicyName = DataFixtures.PolicyName1,
@@ -44,7 +44,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
             {
                 var responseExample = new UnassignmentResponse
                 {
-                    Token = DataFixtures.Token,
+                    Token = DataFixtures.Token1,
                     RefreshToken = DataFixtures.RefreshToken,
                     UserID = DataFixtures.GUID,
                     PolicyName = DataFixtures.PolicyName2,
