@@ -34,6 +34,8 @@ namespace Tests.UnitTests
 
         private readonly Mock<UserManager<User>> _userManager = MockConfigurator.MockUserManager();
 
+        private readonly SecurityTokenDescriptor _securityTokenDescriptor = MockConfigurator.MockSecurityTokenDescriptor();
+
         private readonly ITokenService _tokenService;
 
         public TokenServiceTests()
@@ -44,7 +46,8 @@ namespace Tests.UnitTests
                  _jwtConfig,
                  _userManager.Object,
                  _signingCredentials,
-                 _validationParameters
+                 _validationParameters,
+                 _securityTokenDescriptor
                 );
         }
 
@@ -268,7 +271,7 @@ namespace Tests.UnitTests
 
         public void Dispose()
         {
-            typeof(ClaimHelper).TypeInitializer.Invoke(null, null);
+            typeof(ClaimHelper).TypeInitializer.Invoke(null, null); //set the mocked delegate values back to normal
         }
     }
 }

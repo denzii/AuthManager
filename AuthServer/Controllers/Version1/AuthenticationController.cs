@@ -56,13 +56,16 @@ namespace AuthServer.Controllers.Version1
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> Register([FromBody] RegistrationRequest request)
         {
+            //TODO replace organisation name in the request with organisation UUID
+            // this could reduce the change of brute force success on unrightfully registering users on an organisation
             Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.OrganisationName);
-            User newUser =  _unitOfWork.UserRepository.CreateUser(request, organisation, null);
+            User newUser = _unitOfWork.UserRepository.CreateUser(request, organisation, null);
 
             var transaction = _unitOfWork.UserRepository.BeginTransaction();
             List<ErrorResponse> errorResponses = await _authService.ValidateRegistrationAsync(request, organisation, newUser);
-            
-            if (errorResponses.Any()){
+
+            if (errorResponses.Any())
+            {
                 return BadRequest(errorResponses);
             }
 
@@ -93,14 +96,15 @@ namespace AuthServer.Controllers.Version1
         {
             if (!await _unitOfWork.UserRepository.UserWithEmailExistsAsync(request.Email))
             {
-                return BadRequest( new ErrorResponse { Message = "User with the given email address could not be found." });
+                return BadRequest(new ErrorResponse { Message = "User with the given email address could not be found." });
             }
 
             User user = await _unitOfWork.UserRepository.GetByEmailAsync(request.Email);
 
             LoginResponse loginResponse = await _authService.LoginUserAsync(request, user);
 
-            if (loginResponse == null){
+            if (loginResponse == null)
+            {
                 return BadRequest("Password is not valid");
             }
             Dictionary<string, string> tokens = tokens = await _tokenService.GetTokensAsync(user);
@@ -126,19 +130,20 @@ namespace AuthServer.Controllers.Version1
         {
             ClaimsPrincipal validatedToken = _tokenService.IsTokenAuthentic(request.Token);
 
-            if(validatedToken == null)
+            if (validatedToken == null)
             {
                 return BadRequest(new ErrorResponse { Message = "This token has been tampered with." });
             }
 
             RefreshToken refreshToken = await _tokenService.CanTokenBeRefreshedAsync(validatedToken, request.RefreshToken);
 
-            if (refreshToken == null){
-                return BadRequest( new ErrorResponse { Message = "Invalid Token, cannot refresh." });
+            if (refreshToken == null)
+            {
+                return BadRequest(new ErrorResponse { Message = "Invalid Token, cannot refresh." });
             }
-            
+
             string organisationID = ClaimHelper.GetNamedClaim(validatedToken, "OrganisationID");
-            
+
             var transaction = _unitOfWork.RefreshTokenRepository.BeginTransaction();
 
             RefreshTokenResponse refreshTokenResponse = await _tokenService.RefreshTokenAsync(validatedToken, refreshToken, organisationID);

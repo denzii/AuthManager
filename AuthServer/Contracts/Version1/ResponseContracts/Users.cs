@@ -19,8 +19,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
         {
             public Response<GetResponse> GetExamples()
             {
-                var responseExample = new GetResponse
-                {
+                var responseExample = new GetResponse {
                     Email = DataFixtures.Email1,
                     FirstName = DataFixtures.Firstname1,
                     LastName = DataFixtures.Lastname,
@@ -35,7 +34,7 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
         {
             public PagedResponse<GetResponse> GetExamples()
             {
-                var responseExamples = new List<GetResponse>{
+                var responseExamples = new List<GetResponse> {
                     new GetResponse {
                     Email = DataFixtures.Email1,
                     FirstName = DataFixtures.Firstname1,

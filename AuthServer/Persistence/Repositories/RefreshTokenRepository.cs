@@ -11,9 +11,7 @@ namespace AuthServer.Persistence.Repositories
 {
 	public class RefreshTokenRepository : Repository<RefreshToken>, IRefreshTokenRepository
 	{
-		public RefreshTokenRepository(AuthServerContext context) : base(context)
-		{
-		}
+		public RefreshTokenRepository(AuthServerContext context) : base(context){ }
 
 		public Task<RefreshToken> GetRefreshToken(string refreshToken)
 		{

@@ -24,7 +24,7 @@ namespace AuthServer.Configurations.Middlewares
             }
             catch(Exception e)
             {
-                Log.Fatal(e, "Fatal Exception logged");
+                Log.Fatal(e.ToString());
                 await HandleExceptionAsync(httpContext);
             }
             finally

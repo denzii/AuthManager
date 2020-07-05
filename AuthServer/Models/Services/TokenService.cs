@@ -25,13 +25,15 @@ namespace AuthServer.Models.Services
         private readonly UserManager<User> _userManager;
         private readonly SigningCredentials _signingCredentials;
         private readonly TokenValidationParameters _tokenValidationParameters;
+        private readonly SecurityTokenDescriptor _securityTokenDescriptor;
         
         public TokenService(JwtSecurityTokenHandler jwtSecurityTokenHandler,
         IUnitOfWork unitOfWork,
         JWTBearerAuthConfig jwtConfig,
         UserManager<User> userManager,
         SigningCredentials signingCredentials,
-        TokenValidationParameters tokenValidationParameters
+        TokenValidationParameters tokenValidationParameters,
+        SecurityTokenDescriptor securityTokenDescriptor
         )
         {
             _jwtSecurityTokenHandler = jwtSecurityTokenHandler;
@@ -40,13 +42,12 @@ namespace AuthServer.Models.Services
             _userManager = userManager;
             _signingCredentials = signingCredentials;
             _tokenValidationParameters = tokenValidationParameters;
+            _securityTokenDescriptor = securityTokenDescriptor;
         }
 
         public async Task<Dictionary<string, string>> GetTokensAsync(User user)
         {
             var tokens = new Dictionary<string, string>();
-
-            byte[] key = Encoding.ASCII.GetBytes(_jwtConfig.Secret); //key = secret in ascii bytes
 
             var claims = new List<Claim>
                 {
@@ -59,17 +60,9 @@ namespace AuthServer.Models.Services
             var userClaims = await _userManager.GetClaimsAsync(user);
             claims.AddRange(userClaims);
 
-            var tokenDescriptor = new SecurityTokenDescriptor()
-            {
-                // SecurityTokenDescriptor takes in an array of Claims wrapped in Claims Identity in its Subject field
-                // This is how we specify exactly what the token must include, each rule is defined as a new Claim
-                // Each Claim is matched against a registered Claim Name or custom "string".
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.Add(_jwtConfig.TokenLifetime),
-                SigningCredentials = _signingCredentials
-            };
+            _securityTokenDescriptor.Subject = new ClaimsIdentity(claims);
 
-            SecurityToken token = _jwtSecurityTokenHandler.CreateToken(tokenDescriptor);
+            SecurityToken token = _jwtSecurityTokenHandler.CreateToken(_securityTokenDescriptor);
             RefreshToken refreshToken =  _unitOfWork.RefreshTokenRepository.CreateRefreshToken(token.Id, user.Id);
 
             await _unitOfWork.RefreshTokenRepository.AddAsync(refreshToken);
@@ -98,13 +91,13 @@ namespace AuthServer.Models.Services
             }
             catch(Exception e) { 
                 Log.Error(e.ToString());
+
                 return null; 
             }
         }
 
         private bool JwtHasValidAlgorithm(SecurityToken validatedToken)
         {
-            validatedToken.GetType();
             return (validatedToken is JwtSecurityToken jwtSecurityToken)
                 && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
         }
@@ -120,8 +113,6 @@ namespace AuthServer.Models.Services
             DateTime expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(expiryDateUnix);
 
-            string jti = ClaimHelper.GetJTI(validatedToken);
-
             RefreshToken storedRefreshToken = await _unitOfWork.RefreshTokenRepository.GetRefreshToken(refreshToken);
 
             if (expiryDateTimeUtc > DateTime.UtcNow
@@ -129,7 +120,7 @@ namespace AuthServer.Models.Services
                 || DateTime.UtcNow > storedRefreshToken.ExpiryDate
                 || storedRefreshToken.Invalidated
                 || storedRefreshToken.Used
-                || storedRefreshToken.JwtID != jti)
+                || storedRefreshToken.JwtID != ClaimHelper.GetJTI(validatedToken))
             {
                 return null;
             }
@@ -155,7 +146,6 @@ namespace AuthServer.Models.Services
             Dictionary<string, string> tokens = await GetTokensAsync(user);
             tokens.TryGetValue("SecurityToken", out string securityToken);
             tokens.TryGetValue("RefreshToken", out string newRefreshToken);
-
 
             return new RefreshTokenResponse
             {

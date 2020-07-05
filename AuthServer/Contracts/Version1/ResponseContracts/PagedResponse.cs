@@ -4,11 +4,8 @@ namespace AuthServer.Contracts.Version1.ResponseContracts
 {
     public class PagedResponse<T>
     {
-        public PagedResponse()
-        {
-            
-        }
-        
+        public PagedResponse() { }
+
         public PagedResponse(IEnumerable<T> data)
         {
             Data = data;

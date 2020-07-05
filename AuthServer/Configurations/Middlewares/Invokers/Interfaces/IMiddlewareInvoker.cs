@@ -10,6 +10,6 @@ namespace AuthServer.Configurations.Middlewares.Invokers.Interfaces
 {
 	public interface IMiddlewareInvoker
 	{ 
-		public void InvokeMiddleware(IApplicationBuilder app, IConfiguration configuration);
+		void InvokeMiddleware(IApplicationBuilder app, IConfiguration configuration);
 	}
 }

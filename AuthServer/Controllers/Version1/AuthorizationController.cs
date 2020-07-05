@@ -26,7 +26,7 @@ namespace AuthServer.Controllers.Version1
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Policy = AuthorizationPolicies.AdminPolicy)]
+    [Authorize(Policy = InternalPolicies.AdminPolicy)]
     public class AuthorizationController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -50,38 +50,39 @@ namespace AuthServer.Controllers.Version1
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> AssignPermission([FromBody] AssignmentRequest request)
         {
-                //TODO Implement many-to-many relationship so user could own more than one permission
-                
-                //      TODO 
-                //     Implement  auto re-login  to update claims info in the jwt
-                //     Or invalidate jwt so user must login again 
-                //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
+            //TODO Implement many-to-many relationship so user could own more than one permission
+            //      TODO 
+            //     Implement  auto re-login  to update claims info in the jwt
+            //     Or invalidate jwt so user must login again 
+            //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
 
             var organisationID = HttpContext.GetOrganisationID();
             var user = await _unitOfWork.UserRepository.GetWithDetailsAsync(request.UserID, organisationID);
-            var policy = await  _unitOfWork.PolicyRepository.GetByOrganisationAsync(request.PolicyName, organisationID);
-                
-            if (user == null || policy == null || user.Policy?.Name == policy.Name){
-                return BadRequest(new ErrorResponse{
+            var policy = await _unitOfWork.PolicyRepository.GetByOrganisationAsync(request.PolicyName, organisationID);
+
+            if (user == null || policy == null || user.Policy?.Name == policy.Name)
+            {
+                return BadRequest(new ErrorResponse
+                {
                     Message = "Permission/User does not exist or already has the permission."
-                    });
+                });
             }
-                
+
             var transaction = _unitOfWork.UserRepository.BeginTransaction();
 
             user.Policy = policy;
             await _unitOfWork.UserRepository.AddAsync(user);
+            await _userManager.AddClaimAsync(user, new Claim(policy.Claim, "true"));
 
-            await _userManager.AddClaimAsync(user,new Claim(policy.Claim, "true"));
-                
             transaction.Commit();
 
-            AssignmentResponse assignmentResponse = new AssignmentResponse{
+            AssignmentResponse assignmentResponse = new AssignmentResponse
+            {
                 UserID = user.Id,
                 PolicyName = policy.Name,
                 Info = "Permission has been granted, please log-in again for the action to take effect."
             };
-            
+
             return Ok(new Response<AssignmentResponse>(assignmentResponse));
 
         }
@@ -96,27 +97,24 @@ namespace AuthServer.Controllers.Version1
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> UnassignPermission([FromBody] UnassignmentRequest request)
         {
-                //      TODO 
-                //     Implement  auto re-login  to update claims info in the jwt
-                //     Or invalidate jwt so user must login again 
-                //     one of the above solutions can avoid asking user obtain a new token and automatically applying permission on token
-
             var user = await _unitOfWork.UserRepository.GetWithDetailsAsync(request.UserID, HttpContext.GetOrganisationID());
 
-            if (user == null || user.Policy == null ){
-                return BadRequest(new ErrorResponse{Message = "User does not exist or does not own a permission."});
+            if (user == null || user.Policy == null)
+            {
+                return BadRequest(new ErrorResponse { Message = "User does not exist or does not own a permission." });
             }
 
             user.Policy = null;
             await _unitOfWork.CompleteAsync();
 
             var response = new Response<UnassignmentResponse>(
-                new UnassignmentResponse{
-                Info = "Permission has been removed, please log-in again for the action to take effect."
-            });
+                new UnassignmentResponse
+                {
+                    Info = "Permission has been removed, please log-in again for the action to take effect."
+                });
 
             return Ok(response);
-             
+
         }
     }
 }

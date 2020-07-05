@@ -50,7 +50,7 @@ namespace Tests.UnitTests
 
             var reader = new StreamReader(_httpContext.Response.Body); //configure reader on the stream
             string streamText = reader.ReadToEnd(); //get the stream content into text format
-            var response = (JObject)JsonConvert.DeserializeObject(streamText); //serialize text into queryable json linq object
+            var response = (JObject)JsonConvert.DeserializeObject(streamText); //serialize text into json linq object
 
             if (response == null)
             {

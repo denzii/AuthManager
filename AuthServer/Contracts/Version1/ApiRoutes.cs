@@ -15,6 +15,8 @@ namespace AuthServer.Contracts.Version1
 		public const string Identifier = "{ID}";
 		public const string Name = "{Name}";
 
+
+		//TODO: Refactor the non-RESTful endpoints to be more REST appropriated
 		public static class Authentication
 		{
 			public const string Register = BaseRoute + "/" + nameof(Authentication) + "/" + "Register";

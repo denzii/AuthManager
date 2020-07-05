@@ -5,23 +5,39 @@ namespace AuthServer.Contracts.Version1
     public static class DataFixtures
     {
         public const string Firstname1 = "Ali";
+
         public const string Firstname2 = "Veli";
+
         public const string Firstname3 = "Zeki";
+
         public const string Lastname = "Kurabiyeci";
+
         public const string Email1 = "alikurabiyeci@example.com";
+
         public const string Email2 = "velikurabiyeci@example.com";
+
         public const string Email3 = "zekikurabiyeci@example.com";
+
         public const string Password = "SuperSecureP@ssword1";
+
         public const string Male = "M";
+
         public const string Female = "F";
+
         public const string Organisation = "MonolithPizza";
+
         public const string PolicyName1 = "Driver";
+
         public const string PolicyClaim1 = "IsDriver";
+
         public const string PolicyName2 = "OvenMaster";
+
         public const string PolicyClaim2 = "IsOvenMaster";
+
         public const string PolicyName3 = "Cashier";
+
         public const string PolicyClaim3 = "IsCashier";
-        
+
         //Signed with actual secret
         public const string Token1 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2ZWxpa3VyYWJpeWVjaTdAZXhhbXBsZS5jb20iLCJqdGkiOiI0NzdhMDU5Zi1hMTIxLTQ5NTEtYjJkNS0xNDIxMmIwODU3MjciLCJJRCI6ImMzNWE0ZWFkLWU2YTgtNDExZC1hMzljLWQ3ZWI5MmEzNzJhMCIsIk9yZ2FuaXNhdGlvbklEIjoiNTVhZWRhMjEtZjQwNy00MjdhLWE1OGMtN2E0M2VhYzU2OGYyIiwiSXNBZG1pbiI6InRydWUiLCJuYmYiOjE1OTM4Nzg0MTcsImV4cCI6MTU5Mzg3ODcxNywiaWF0IjoxNTkzODc4NDE3fQ.Xx-jolTCQOfFvNJKwpdRizWls0XlBKFz0pexZeuqrRw";
         
@@ -34,16 +50,26 @@ namespace AuthServer.Contracts.Version1
         public const string Token4 = "UnknownTokenFormat";
         
         public const string RefreshToken = "fc5bff51-8741-4163-9124-f93f356b2a34";
+
         public const string ValidationFieldName = "Sex";
+
         public const string ValidationErrorMessage = "Sex cannot be \"Unicorn\"";
+
         public const string ErrorMessage = "Something went wrong with the operation.";
+
         public const string PolicyGenericInfo = "Operation Successful, please login again for the changes to take effect";
+
         public const string Identifier = "5";
+
         public const string PreviousPage = "https://localhost:5001/api/v1/Policies?pageNumber=1&pageSize=10";
+
         public const string NextPage = "https://localhost:5001/api/v1/Policies?pageNumber=3&pageSize=10";
+
         public const string TokenSecret = "eeeeeeee-eeee-eeee-eeee-eeeeeeee";
+
         public const string ApiKeyValue  = "ApiKeyValue";
 
+        public static TimeSpan TokenLifetime = new TimeSpan(0,5,0);
         public static string GUID = Guid.NewGuid().ToString();
         public static DateTime Now = DateTime.Now;
 

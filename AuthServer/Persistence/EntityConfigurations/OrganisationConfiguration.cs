@@ -8,23 +8,22 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AuthServer.Persistence.EntityConfigurations
 {
-	public class OrganisationConfiguration : IEntityTypeConfiguration<Organisation>
-	{
-		public void Configure(EntityTypeBuilder<Organisation> modelBuilder)
-		{
-			modelBuilder
-			.HasKey(organisation => new {
-				organisation.ID,
-				organisation.EstablishedOn 
-			});
+    public class OrganisationConfiguration : IEntityTypeConfiguration<Organisation>
+    {
+        public void Configure(EntityTypeBuilder<Organisation> modelBuilder)
+        {
+            modelBuilder.HasKey(organisation => new {
+                organisation.ID,
+                organisation.EstablishedOn
+            });
 
-			modelBuilder
-			.HasMany(organisation => organisation.Users)
-			.WithOne(user => user.Organisation);
+            modelBuilder
+            .HasMany(organisation => organisation.Users)
+            .WithOne(user => user.Organisation);
 
-			modelBuilder
-			.HasMany(organisation => organisation.Policies)
-			.WithOne(policy => policy.Organisation);
-		}
-	}
+            modelBuilder
+            .HasMany(organisation => organisation.Policies)
+            .WithOne(policy => policy.Organisation);
+        }
+    }
 }

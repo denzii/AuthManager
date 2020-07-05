@@ -10,7 +10,7 @@ namespace AuthServer.Models.Entities
 
          public string Claim { get; set; }
 
-        [ForeignKey("Organisation")]
+        [ForeignKey(nameof(Organisation))]
         public string OrganisationID { get; set; }
 
         public virtual Organisation Organisation { get; set; }

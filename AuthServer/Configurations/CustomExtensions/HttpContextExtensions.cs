@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AuthServer.Models.Helpers;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,8 +18,8 @@ namespace AuthServer.Configurations.CustomExtensions
 			{
 				return String.Empty;
 			}
-
-			return user.Claims.Single(x => x.Type == "ID").Value;
+			
+			return ClaimHelper.GetNamedClaim(user, "ID");
 		}
 
 		public static string GetOrganisationID(this HttpContext httpContext)
@@ -30,7 +31,7 @@ namespace AuthServer.Configurations.CustomExtensions
 				return String.Empty;
 			}
 
-			return user.Claims.Single(x => x.Type == "OrganisationID").Value;
+			return ClaimHelper.GetNamedClaim(user, "OrganisationID");
 		}
 	}
 }

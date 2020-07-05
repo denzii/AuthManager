@@ -57,11 +57,6 @@ namespace AuthServer.Controllers.Version1
 
             var getResponses = _mapper.Map<List<GetResponse>>(users);
 
-            if (pageFilter == null || pageFilter.PageNumber < 1 || pageFilter.PageSize < 1)
-            {
-                return Ok(new PagedResponse<GetResponse>(getResponses));
-            }
-
             var pagedResponse = Paginator.CreatePagedResponse(_URIService, pageFilter, getResponses, HttpContext.Request.Path);
 
             return Ok(pagedResponse);

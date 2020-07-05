@@ -10,20 +10,20 @@ using System.Threading.Tasks;
 
 namespace AuthServer.Configurations.ServiceInjectors
 {
-	public class AutoMapperServicesInjector : IServiceInjector
-	{
-		public void InjectServices(IConfiguration configuration, IServiceCollection services)
-		{
-			MapperConfiguration config = new AutoMapper.MapperConfiguration(config =>
-			{
-				config.AddProfile(new ModelToResponseProfile());
-				config.AddProfile(new RequestToModelProfile());
-			});
-			IMapper mapper = config.CreateMapper();
+    public class AutoMapperServicesInjector : IServiceInjector
+    {
+        public void InjectServices(IConfiguration configuration, IServiceCollection services)
+        {
+            MapperConfiguration config = new AutoMapper.MapperConfiguration(config => {
+                config.AddProfile(new ModelToResponseProfile());
+                config.AddProfile(new RequestToModelProfile());
+            });
+			
+            IMapper mapper = config.CreateMapper();
 
-			services.AddSingleton(mapper);
-			services.AddTransient<ModelToResponseProfile>();
-			services.AddTransient<RequestToModelProfile>();
-		}
-	}
+            services.AddSingleton(mapper);
+            services.AddTransient<ModelToResponseProfile>();
+            services.AddTransient<RequestToModelProfile>();
+        }
+    }
 }
