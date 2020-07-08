@@ -84,7 +84,7 @@ namespace AuthServer.Controllers.Version1
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> GetPolicy(string name)
         {
-            Policy policy = await  _unitOfWork.PolicyRepository.GetByOrganisationAsync(name, HttpContext.GetOrganisationID());
+            Policy policy = await _unitOfWork.PolicyRepository.GetByOrganisationAsync(name, HttpContext.GetOrganisationID());
 
             if (policy == null)
             {

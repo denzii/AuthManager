@@ -61,13 +61,13 @@ namespace AuthServer.Controllers.Version1
             Organisation organisation = await _unitOfWork.OrganisationRepository.GetByNameAsync(request.OrganisationName);
             User newUser = _unitOfWork.UserRepository.CreateUser(request, organisation, null);
 
-            var transaction = _unitOfWork.UserRepository.BeginTransaction();
             List<ErrorResponse> errorResponses = await _authService.ValidateRegistrationAsync(request, organisation, newUser);
 
             if (errorResponses.Any())
             {
                 return BadRequest(errorResponses);
             }
+            var transaction = _unitOfWork.UserRepository.BeginTransaction();
 
             RegistrationResponse registrationResponse = await _authService.RegisterUserAsync(request, organisation, newUser);
             var locationURI = _URIService.GetUserURI(registrationResponse.ID);
